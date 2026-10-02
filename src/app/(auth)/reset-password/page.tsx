@@ -29,8 +29,8 @@ export default async function ResetPasswordPage({ searchParams }: PageProps<"/re
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-xl">Choose a new password</CardTitle>
-        <CardDescription>Reset links expire after one hour.</CardDescription>
+        <CardTitle className="text-xl">Choose a password</CardTitle>
+        <CardDescription>Set the password you&apos;ll use to sign in.</CardDescription>
       </CardHeader>
       <CardContent>
         <ResetPasswordForm token={token} />

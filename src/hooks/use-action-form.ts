@@ -37,7 +37,8 @@ export function useActionForm<TValues extends FieldValues, TData = undefined>(
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const form = useForm<TValues>({
-    resolver: zodResolver(options.schema as never),
+    // raw: submit the input values; the server action parses them with the same schema.
+    resolver: zodResolver(options.schema as never, undefined, { raw: true }),
     defaultValues: options.defaultValues,
   });
 

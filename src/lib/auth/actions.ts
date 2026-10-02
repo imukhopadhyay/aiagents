@@ -4,6 +4,7 @@ import { AuthError } from "next-auth";
 import { headers } from "next/headers";
 
 import { auth, signIn, signOut } from "@/auth";
+import { appBaseUrl } from "@/lib/app-url";
 import { recordAudit } from "@/lib/audit";
 import { requestPasswordReset, resetPassword } from "@/lib/auth/password-reset";
 import {
@@ -78,14 +79,7 @@ export async function forgotPasswordAction(input: ForgotPasswordInput): Promise<
   const parsed = forgotPasswordSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: "Enter a valid email address." };
 
-  // Build links from configuration, not the Host header, so a spoofed header
-  // can't point reset emails at another site. The header fallback is dev-only.
-  let baseUrl = process.env.AUTH_URL;
-  if (!baseUrl) {
-    if (process.env.NODE_ENV === "production") throw new Error("AUTH_URL is not set");
-    baseUrl = `http://${(await headers()).get("host")}`;
-  }
-  await requestPasswordReset(parsed.data.email, baseUrl);
+  await requestPasswordReset(parsed.data.email, await appBaseUrl());
 
   return {
     ok: true,

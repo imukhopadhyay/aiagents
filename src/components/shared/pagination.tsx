@@ -27,31 +27,31 @@ export function Pagination({
         {total === 0 ? "No results" : `Showing ${from}–${to} of ${total}`}
       </p>
       <div className="flex items-center gap-2">
-        <Button variant="outline" size="sm" asChild={page > 1} disabled={page <= 1}>
-          {page > 1 ? (
+        {page > 1 ? (
+          <Button variant="outline" size="sm" asChild>
             <Link href={hrefWith(pathname, params, { page: page - 1 })}>
               <ChevronLeft /> Previous
             </Link>
-          ) : (
-            <span>
-              <ChevronLeft /> Previous
-            </span>
-          )}
-        </Button>
+          </Button>
+        ) : (
+          <Button variant="outline" size="sm" disabled>
+            <ChevronLeft /> Previous
+          </Button>
+        )}
         <span className="text-muted-foreground tabular-nums">
           {page} / {pages}
         </span>
-        <Button variant="outline" size="sm" asChild={page < pages} disabled={page >= pages}>
-          {page < pages ? (
+        {page < pages ? (
+          <Button variant="outline" size="sm" asChild>
             <Link href={hrefWith(pathname, params, { page: page + 1 })}>
               Next <ChevronRight />
             </Link>
-          ) : (
-            <span>
-              Next <ChevronRight />
-            </span>
-          )}
-        </Button>
+          </Button>
+        ) : (
+          <Button variant="outline" size="sm" disabled>
+            Next <ChevronRight />
+          </Button>
+        )}
       </div>
     </div>
   );
