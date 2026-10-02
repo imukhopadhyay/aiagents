@@ -100,6 +100,21 @@ enum OfferStatus {
   EXPIRED
 }
 
+enum CorrectionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum DocumentCategory {
+  CONTRACT
+  IDENTIFICATION
+  PAYROLL
+  CERTIFICATE
+  PERFORMANCE
+  OTHER
+}
+
 enum AuditAction {
   CREATE
   UPDATE
@@ -134,6 +149,7 @@ model User {
   passwordResetTokens PasswordResetToken[]
   employee            Employee?
   auditLogs           AuditLog[]
+  notifications       Notification[]
 
   @@map("users")
 }
@@ -313,6 +329,7 @@ model Location {
 
   employees   Employee[]
   jobOpenings JobOpening[]
+  holidays    Holiday[]
 
   @@map("locations")
 }
@@ -330,6 +347,7 @@ model Employee {
   phone            String?
   dateOfBirth      DateTime?        @db.Date
   photoUrl         String?
+  address          String?
   departmentId     String?
   positionId       String?
   locationId       String?
@@ -342,22 +360,27 @@ model Employee {
   updatedAt        DateTime         @updatedAt
   deletedAt        DateTime?
 
-  user               User?               @relation(fields: [userId], references: [id], onDelete: SetNull)
-  department         Department?         @relation("DepartmentMembers", fields: [departmentId], references: [id], onDelete: SetNull)
-  position           Position?           @relation(fields: [positionId], references: [id], onDelete: SetNull)
-  location           Location?           @relation(fields: [locationId], references: [id], onDelete: SetNull)
-  manager            Employee?           @relation("ReportingLine", fields: [managerId], references: [id], onDelete: SetNull)
-  directReports      Employee[]          @relation("ReportingLine")
-  headOfDepartment   Department?         @relation("DepartmentHead")
-  emergencyContacts  EmergencyContact[]
-  attendanceRecords  AttendanceRecord[]
-  leaveBalances      LeaveBalance[]
-  leaveRequests      LeaveRequest[]      @relation("LeaveRequester")
-  leaveApprovals     LeaveRequest[]      @relation("LeaveApprover")
-  hiringManagerFor   JobOpening[]        @relation("HiringManager")
-  interviews         Interview[]         @relation("Interviewer")
-  interviewFeedback  InterviewFeedback[]
-  hiredFromCandidate Candidate?          @relation("HiredAs")
+  user                  User?                  @relation(fields: [userId], references: [id], onDelete: SetNull)
+  department            Department?            @relation("DepartmentMembers", fields: [departmentId], references: [id], onDelete: SetNull)
+  position              Position?              @relation(fields: [positionId], references: [id], onDelete: SetNull)
+  location              Location?              @relation(fields: [locationId], references: [id], onDelete: SetNull)
+  manager               Employee?              @relation("ReportingLine", fields: [managerId], references: [id], onDelete: SetNull)
+  directReports         Employee[]             @relation("ReportingLine")
+  headOfDepartment      Department?            @relation("DepartmentHead")
+  emergencyContacts     EmergencyContact[]
+  attendanceRecords     AttendanceRecord[]
+  leaveBalances         LeaveBalance[]
+  leaveRequests         LeaveRequest[]         @relation("LeaveRequester")
+  leaveApprovals        LeaveRequest[]         @relation("LeaveApprover")
+  leaveManagerApprovals LeaveRequest[]         @relation("LeaveManagerApprover")
+  documents             EmployeeDocument[]     @relation("DocumentOwner")
+  uploadedDocuments     EmployeeDocument[]     @relation("DocumentUploader")
+  attendanceCorrections AttendanceCorrection[] @relation("CorrectionRequester")
+  reviewedCorrections   AttendanceCorrection[] @relation("CorrectionReviewer")
+  hiringManagerFor      JobOpening[]           @relation("HiringManager")
+  interviews            Interview[]            @relation("Interviewer")
+  interviewFeedback     InterviewFeedback[]
+  hiredFromCandidate    Candidate?             @relation("HiredAs")
 
   @@index([departmentId])
   @@index([positionId])
@@ -399,12 +422,38 @@ model AttendanceRecord {
   createdAt  DateTime         @default(now())
   updatedAt  DateTime         @updatedAt
 
-  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  employee    Employee               @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  corrections AttendanceCorrection[]
 
   @@unique([employeeId, date])
   @@index([date])
   @@index([status])
   @@map("attendance_records")
+}
+
+model AttendanceCorrection {
+  id                 String           @id @default(cuid())
+  employeeId         String
+  attendanceRecordId String?
+  date               DateTime         @db.Date
+  requestedClockIn   DateTime?
+  requestedClockOut  DateTime?
+  requestedStatus    AttendanceStatus
+  reason             String
+  status             CorrectionStatus @default(PENDING)
+  reviewerId         String?
+  reviewComment      String?
+  reviewedAt         DateTime?
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+
+  employee         Employee          @relation("CorrectionRequester", fields: [employeeId], references: [id], onDelete: Cascade)
+  reviewer         Employee?         @relation("CorrectionReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
+  attendanceRecord AttendanceRecord? @relation(fields: [attendanceRecordId], references: [id], onDelete: SetNull)
+
+  @@index([employeeId])
+  @@index([status])
+  @@map("attendance_corrections")
 }
 
 // ─── Leave ───────────────────────────────────────────────────────────────────
@@ -449,32 +498,53 @@ model LeaveBalance {
 }
 
 model LeaveRequest {
-  id              String             @id @default(cuid())
-  employeeId      String
-  leaveTypeId     String
-  startDate       DateTime           @db.Date
-  endDate         DateTime           @db.Date
-  startHalfDay    Boolean            @default(false)
-  endHalfDay      Boolean            @default(false)
-  days            Decimal            @db.Decimal(5, 1)
-  reason          String?
-  status          LeaveRequestStatus @default(PENDING)
-  approverId      String?
-  decisionComment String?
-  decidedAt       DateTime?
-  createdAt       DateTime           @default(now())
-  updatedAt       DateTime           @updatedAt
+  id                String             @id @default(cuid())
+  employeeId        String
+  leaveTypeId       String
+  startDate         DateTime           @db.Date
+  endDate           DateTime           @db.Date
+  startHalfDay      Boolean            @default(false)
+  endHalfDay        Boolean            @default(false)
+  days              Decimal            @db.Decimal(5, 1)
+  reason            String?
+  status            LeaveRequestStatus @default(PENDING)
+  // Stage 1: the employee's manager. Stage 2 (final): HR, stored in approverId.
+  managerApproverId String?
+  managerComment    String?
+  managerDecidedAt  DateTime?
+  approverId        String?
+  decisionComment   String?
+  decidedAt         DateTime?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
 
-  employee  Employee  @relation("LeaveRequester", fields: [employeeId], references: [id], onDelete: Cascade)
-  leaveType LeaveType @relation(fields: [leaveTypeId], references: [id], onDelete: Restrict)
-  approver  Employee? @relation("LeaveApprover", fields: [approverId], references: [id], onDelete: SetNull)
+  employee        Employee  @relation("LeaveRequester", fields: [employeeId], references: [id], onDelete: Cascade)
+  leaveType       LeaveType @relation(fields: [leaveTypeId], references: [id], onDelete: Restrict)
+  approver        Employee? @relation("LeaveApprover", fields: [approverId], references: [id], onDelete: SetNull)
+  managerApprover Employee? @relation("LeaveManagerApprover", fields: [managerApproverId], references: [id], onDelete: SetNull)
 
   @@index([employeeId])
   @@index([leaveTypeId])
   @@index([approverId])
+  @@index([managerApproverId])
   @@index([status])
   @@index([startDate, endDate])
   @@map("leave_requests")
+}
+
+model Holiday {
+  id         String   @id @default(cuid())
+  name       String
+  date       DateTime @db.Date
+  locationId String? // null = applies to every location
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  location Location? @relation(fields: [locationId], references: [id], onDelete: Cascade)
+
+  @@index([date])
+  @@index([locationId])
+  @@map("holidays")
 }
 
 // ─── Recruitment ─────────────────────────────────────────────────────────────
@@ -517,7 +587,8 @@ model Candidate {
   lastName          String
   email             String    @unique
   phone             String?
-  resumeUrl         String?
+  resumeKey         String? // storage key of the uploaded resume
+  resumeFileName    String?
   linkedinUrl       String?
   source            String? // e.g. referral, job board, careers page
   tags              String[]
@@ -614,6 +685,43 @@ model Offer {
   @@index([applicationId])
   @@index([status])
   @@map("offers")
+}
+
+// ─── Documents & notifications ───────────────────────────────────────────────
+
+model EmployeeDocument {
+  id           String           @id @default(cuid())
+  employeeId   String
+  name         String
+  category     DocumentCategory @default(OTHER)
+  fileKey      String           @unique
+  mimeType     String
+  size         Int
+  uploadedById String?
+  createdAt    DateTime         @default(now())
+
+  employee   Employee  @relation("DocumentOwner", fields: [employeeId], references: [id], onDelete: Cascade)
+  uploadedBy Employee? @relation("DocumentUploader", fields: [uploadedById], references: [id], onDelete: SetNull)
+
+  @@index([employeeId])
+  @@map("employee_documents")
+}
+
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String
+  type      String // e.g. leave.submitted, interview.scheduled
+  title     String
+  body      String?
+  link      String?
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt])
+  @@index([createdAt])
+  @@map("notifications")
 }
 
 // ─── Audit ───────────────────────────────────────────────────────────────────
