@@ -16,7 +16,8 @@ import type { z } from "zod";
 import type { ActionResult } from "@/lib/action-types";
 
 interface Options<TValues extends FieldValues, TData> {
-  schema: z.ZodType<TValues, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
+  /** Form values are the schema's input type, since forms submit raw values. */
+  schema: z.ZodType<unknown, TValues>;
   defaultValues: DefaultValues<TValues>;
   action: (values: TValues) => Promise<ActionResult<TData>>;
   /** Toast shown on success when the action doesn't return its own message. */

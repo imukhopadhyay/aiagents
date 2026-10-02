@@ -30,9 +30,18 @@ export async function GET(_request: Request, ctx: RouteContext<"/api/files/[...k
       break;
     }
     case "resumes": {
-      if (!can(user, "recruitment:read")) return notFound();
       const candidate = await db.candidate.findFirst({ where: { resumeKey: key } });
       if (!candidate) return notFound();
+      // Recruiters, plus anyone assigned to interview this candidate.
+      const interviewing =
+        user.employeeId &&
+        (await db.interview.count({
+          where: {
+            application: { candidateId: candidate.id },
+            interviewers: { some: { id: user.employeeId } },
+          },
+        })) > 0;
+      if (!can(user, "recruitment:read") && !interviewing) return notFound();
       downloadName = candidate.resumeFileName ?? undefined;
       break;
     }

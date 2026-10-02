@@ -104,6 +104,7 @@ export const SEGMENT_LABELS: Record<string, string> = {
   admin: "Admin",
   audit: "Audit log",
   notifications: "Notifications",
+  interviews: "Interview",
   new: "New",
   edit: "Edit",
   import: "Import",
