@@ -9,7 +9,14 @@ import { StatCard } from "@/components/shared/stat-card";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { requirePermission } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { formatDate, fullName, labelize } from "@/lib/format";
@@ -25,11 +32,16 @@ export const metadata: Metadata = { title: "Jobs" };
 export default async function JobsPage({ searchParams }: PageProps<"/recruitment">) {
   const user = await requirePermission("recruitment:read");
   const status = first((await searchParams).status);
-  const validStatus = (JOB_STATUSES as readonly string[]).includes(status ?? "") ? (status as (typeof JOB_STATUSES)[number]) : undefined;
+  const validStatus = (JOB_STATUSES as readonly string[]).includes(status ?? "")
+    ? (status as (typeof JOB_STATUSES)[number])
+    : undefined;
 
   const [jobs, metrics] = await Promise.all([
     db.jobOpening.findMany({
-      where: { deletedAt: null, ...(validStatus ? { status: validStatus } : { status: { notIn: ["CLOSED", "FILLED"] } }) },
+      where: {
+        deletedAt: null,
+        ...(validStatus ? { status: validStatus } : { status: { notIn: ["CLOSED", "FILLED"] } }),
+      },
       orderBy: [{ status: "asc" }, { createdAt: "desc" }],
       include: {
         department: { select: { name: true } },
@@ -59,7 +71,12 @@ export default async function JobsPage({ searchParams }: PageProps<"/recruitment
       <RecruitmentTabs active="jobs" />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard title="Open jobs" value={metrics.openJobs} hint={`${metrics.openPositions} position(s) to fill`} icon={Briefcase} />
+        <StatCard
+          title="Open jobs"
+          value={metrics.openJobs}
+          hint={`${metrics.openPositions} position(s) to fill`}
+          icon={Briefcase}
+        />
         <StatCard
           title="Active candidates"
           value={metrics.pipeline.reduce((s, p) => s + p.count, 0)}
@@ -75,10 +92,18 @@ export default async function JobsPage({ searchParams }: PageProps<"/recruitment
         />
       </div>
 
-      <FilterSelect param="status" label="Active jobs" options={JOB_STATUSES.map((s) => ({ value: s, label: labelize(s) }))} />
+      <FilterSelect
+        param="status"
+        label="Active jobs"
+        options={JOB_STATUSES.map((s) => ({ value: s, label: labelize(s) }))}
+      />
 
       {jobs.length === 0 ? (
-        <EmptyState icon={Briefcase} title="No jobs here" description="Create a job to start building a pipeline." />
+        <EmptyState
+          icon={Briefcase}
+          title="No jobs here"
+          description="Create a job to start building a pipeline."
+        />
       ) : (
         <Card className="py-0">
           <CardContent className="px-0">
@@ -95,16 +120,23 @@ export default async function JobsPage({ searchParams }: PageProps<"/recruitment
               </TableHeader>
               <TableBody>
                 {jobs.map((job) => {
-                  const active = job.applications.filter((a) => !["REJECTED", "WITHDRAWN"].includes(a.stage)).length;
+                  const active = job.applications.filter(
+                    (a) => !["REJECTED", "WITHDRAWN"].includes(a.stage),
+                  ).length;
                   const hired = job.applications.filter((a) => a.stage === "HIRED").length;
                   return (
                     <TableRow key={job.id}>
                       <TableCell className="pl-6">
-                        <Link href={`/recruitment/jobs/${job.id}`} className="font-medium hover:underline">
+                        <Link
+                          href={`/recruitment/jobs/${job.id}`}
+                          className="font-medium hover:underline"
+                        >
                           {job.title}
                         </Link>
                         <p className="text-muted-foreground text-xs">
-                          {[job.department?.name, job.location?.name, labelize(job.employmentType)].filter(Boolean).join(" · ")}
+                          {[job.department?.name, job.location?.name, labelize(job.employmentType)]
+                            .filter(Boolean)
+                            .join(" · ")}
                         </p>
                       </TableCell>
                       <TableCell>{job.hiringManager ? fullName(job.hiringManager) : "—"}</TableCell>

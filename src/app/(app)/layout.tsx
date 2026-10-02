@@ -53,7 +53,9 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
             <UserMenu name={user.name} email={user.email} image={user.image} />
           </div>
         </header>
-        <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 lg:py-8">{children}</main>
+        <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 lg:py-8">
+          {children}
+        </main>
       </div>
     </div>
   );

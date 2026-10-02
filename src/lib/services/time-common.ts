@@ -18,7 +18,11 @@ export async function requireOwnEmployee(employeeId: string | null) {
 }
 
 /** Holiday date keys between two dates that apply to a location (or everywhere). */
-export async function holidaySet(start: DateKey, end: DateKey, locationId: string | null): Promise<Set<DateKey>> {
+export async function holidaySet(
+  start: DateKey,
+  end: DateKey,
+  locationId: string | null,
+): Promise<Set<DateKey>> {
   const holidays = await db.holiday.findMany({
     where: {
       date: { gte: fromDateKey(start), lte: fromDateKey(end) },

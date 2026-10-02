@@ -4,11 +4,26 @@ import { EMPLOYMENT_TYPES } from "./employee";
 import { dateKey, optionalDateKey, optionalId, optionalText, requiredText } from "./common";
 
 export const JOB_STATUSES = ["DRAFT", "OPEN", "ON_HOLD", "CLOSED", "FILLED"] as const;
-export const STAGES = ["APPLIED", "SCREENING", "INTERVIEW", "OFFER", "HIRED", "REJECTED", "WITHDRAWN"] as const;
+export const STAGES = [
+  "APPLIED",
+  "SCREENING",
+  "INTERVIEW",
+  "OFFER",
+  "HIRED",
+  "REJECTED",
+  "WITHDRAWN",
+] as const;
 export const INTERVIEW_TYPES = ["PHONE", "VIDEO", "ONSITE", "TECHNICAL", "HR"] as const;
 export const INTERVIEW_STATUSES = ["SCHEDULED", "COMPLETED", "CANCELLED", "NO_SHOW"] as const;
 export const RECOMMENDATIONS = ["strong_yes", "yes", "no", "strong_no"] as const;
-export const OFFER_STATUSES = ["DRAFT", "SENT", "ACCEPTED", "DECLINED", "WITHDRAWN", "EXPIRED"] as const;
+export const OFFER_STATUSES = [
+  "DRAFT",
+  "SENT",
+  "ACCEPTED",
+  "DECLINED",
+  "WITHDRAWN",
+  "EXPIRED",
+] as const;
 
 export const jobSchema = z.object({
   id: z.string().optional(),
@@ -35,13 +50,19 @@ const url = z
   .optional()
   .nullable()
   .transform((v) => (v ? v : null))
-  .refine((v) => v === null || /^https?:\/\/\S+$/i.test(v), { error: "Enter a full URL starting with https://" });
+  .refine((v) => v === null || /^https?:\/\/\S+$/i.test(v), {
+    error: "Enter a full URL starting with https://",
+  });
 
 export const candidateSchema = z.object({
   id: z.string().optional(),
   firstName: requiredText("First name", 100),
   lastName: requiredText("Last name", 100),
-  email: z.string().trim().toLowerCase().pipe(z.email({ error: "Enter a valid email" })),
+  email: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .pipe(z.email({ error: "Enter a valid email" })),
   phone: optionalText(30),
   linkedinUrl: url,
   source: optionalText(100),
@@ -50,7 +71,14 @@ export const candidateSchema = z.object({
     .string()
     .optional()
     .transform((v) =>
-      [...new Set((v ?? "").split(",").map((t) => t.trim().toLowerCase()).filter(Boolean))].slice(0, 20),
+      [
+        ...new Set(
+          (v ?? "")
+            .split(",")
+            .map((t) => t.trim().toLowerCase())
+            .filter(Boolean),
+        ),
+      ].slice(0, 20),
     ),
   notes: optionalText(10_000),
   jobOpeningId: optionalId,

@@ -36,7 +36,9 @@ export interface NavSection {
 export const NAV: NavSection[] = [
   {
     title: "Overview",
-    items: [{ title: "Dashboard", href: "/dashboard", icon: LayoutDashboard, anyOf: ["dashboard:view"] }],
+    items: [
+      { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard, anyOf: ["dashboard:view"] },
+    ],
   },
   {
     title: "People",
@@ -49,22 +51,53 @@ export const NAV: NavSection[] = [
   {
     title: "Time off & attendance",
     items: [
-      { title: "Attendance", href: "/attendance", icon: Clock, anyOf: ["attendance:record", "attendance:read"] },
-      { title: "Leave", href: "/leave", icon: CalendarDays, anyOf: ["leave:request", "leave:read"] },
-      { title: "Approvals", href: "/approvals", icon: CheckSquare, anyOf: ["leave:approve", "attendance:manage"] },
+      {
+        title: "Attendance",
+        href: "/attendance",
+        icon: Clock,
+        anyOf: ["attendance:record", "attendance:read"],
+      },
+      {
+        title: "Leave",
+        href: "/leave",
+        icon: CalendarDays,
+        anyOf: ["leave:request", "leave:read"],
+      },
+      {
+        title: "Approvals",
+        href: "/approvals",
+        icon: CheckSquare,
+        anyOf: ["leave:approve", "attendance:manage"],
+      },
     ],
   },
   {
     title: "Hiring",
     items: [
-      { title: "Jobs", href: "/recruitment", icon: Briefcase, anyOf: ["recruitment:read"], exclude: ["/recruitment/candidates"] },
-      { title: "Candidates", href: "/recruitment/candidates", icon: UserSearch, anyOf: ["recruitment:read"] },
+      {
+        title: "Jobs",
+        href: "/recruitment",
+        icon: Briefcase,
+        anyOf: ["recruitment:read"],
+        exclude: ["/recruitment/candidates"],
+      },
+      {
+        title: "Candidates",
+        href: "/recruitment/candidates",
+        icon: UserSearch,
+        anyOf: ["recruitment:read"],
+      },
     ],
   },
   {
     title: "Administration",
     items: [
-      { title: "Leave settings", href: "/settings/leave", icon: Settings2, anyOf: ["leave:manage"] },
+      {
+        title: "Leave settings",
+        href: "/settings/leave",
+        icon: Settings2,
+        anyOf: ["leave:manage"],
+      },
       { title: "Audit log", href: "/admin/audit", icon: FileClock, anyOf: ["audit:read"] },
     ],
   },

@@ -33,7 +33,9 @@ export function workedHours(clockIn: Date | null, clockOut: Date | null): number
 export function zonedDateTime(dateKey: string, time: string, timeZone: string): Date {
   const [h, m] = time.split(":").map(Number) as [number, number];
   // Start from the wall-clock time as if it were UTC, then subtract the zone offset.
-  const guess = new Date(`${dateKey}T${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:00Z`);
+  const guess = new Date(
+    `${dateKey}T${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:00Z`,
+  );
   const offset = minutesIntoDay(guess, timeZone) - (h * 60 + m);
   // Normalise across day boundaries (offset is within ±14h).
   const normalised = ((offset + 720 + 1440) % 1440) - 720;

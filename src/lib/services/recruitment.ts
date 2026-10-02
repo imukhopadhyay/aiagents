@@ -56,7 +56,13 @@ export async function saveJob(user: CurrentUser, input: z.output<typeof jobSchem
   const job = id
     ? await db.jobOpening.update({ where: { id, deletedAt: null }, data })
     : await db.jobOpening.create({ data: { ...data, status: "DRAFT" } });
-  await recordAudit({ actorId: user.id, action: id ? "UPDATE" : "CREATE", entity: "JobOpening", entityId: job.id, changes: { after: data } });
+  await recordAudit({
+    actorId: user.id,
+    action: id ? "UPDATE" : "CREATE",
+    entity: "JobOpening",
+    entityId: job.id,
+    changes: { after: data },
+  });
   return job;
 }
 
@@ -73,7 +79,13 @@ export async function setJobStatus(user: CurrentUser, input: z.output<typeof job
       ...(input.status === "CLOSED" ? { closedAt: new Date() } : {}),
     },
   });
-  await recordAudit({ actorId: user.id, action: "UPDATE", entity: "JobOpening", entityId: job.id, changes: { status: { from: job.status, to: input.status } } });
+  await recordAudit({
+    actorId: user.id,
+    action: "UPDATE",
+    entity: "JobOpening",
+    entityId: job.id,
+    changes: { status: { from: job.status, to: input.status } },
+  });
 }
 
 // ─── Candidates and applications ─────────────────────────────────────────────
@@ -97,7 +109,9 @@ export async function saveCandidate(user: CurrentUser, input: z.output<typeof ca
 
 export async function uploadResume(user: CurrentUser, input: z.output<typeof resumeUploadSchema>) {
   assertManage(user);
-  const candidate = await db.candidate.findFirst({ where: { id: input.candidateId, deletedAt: null } });
+  const candidate = await db.candidate.findFirst({
+    where: { id: input.candidateId, deletedAt: null },
+  });
   if (!candidate) throw new NotFoundError("Candidate");
   const stored = await saveFile("resumes", input.file);
   await db.candidate.update({
@@ -105,7 +119,13 @@ export async function uploadResume(user: CurrentUser, input: z.output<typeof res
     data: { resumeKey: stored.key, resumeFileName: stored.name },
   });
   await deleteStoredFile(candidate.resumeKey);
-  await recordAudit({ actorId: user.id, action: "UPDATE", entity: "Candidate", entityId: candidate.id, changes: { resume: stored.name } });
+  await recordAudit({
+    actorId: user.id,
+    action: "UPDATE",
+    entity: "Candidate",
+    entityId: candidate.id,
+    changes: { resume: stored.name },
+  });
 }
 
 export async function applyToJob(user: CurrentUser, input: z.output<typeof applySchema>) {
@@ -116,11 +136,23 @@ export async function applyToJob(user: CurrentUser, input: z.output<typeof apply
     throw new DomainError("This job isn't accepting candidates.", "jobOpeningId");
   }
   const existing = await db.application.findUnique({
-    where: { candidateId_jobOpeningId: { candidateId: input.candidateId, jobOpeningId: input.jobOpeningId } },
+    where: {
+      candidateId_jobOpeningId: {
+        candidateId: input.candidateId,
+        jobOpeningId: input.jobOpeningId,
+      },
+    },
   });
-  if (existing) throw new DomainError("This candidate has already applied to this job.", "jobOpeningId");
+  if (existing)
+    throw new DomainError("This candidate has already applied to this job.", "jobOpeningId");
   const application = await db.application.create({ data: input });
-  await recordAudit({ actorId: user.id, action: "CREATE", entity: "Application", entityId: application.id, changes: input });
+  await recordAudit({
+    actorId: user.id,
+    action: "CREATE",
+    entity: "Application",
+    entityId: application.id,
+    changes: input,
+  });
   return application;
 }
 
@@ -155,14 +187,21 @@ export async function moveStage(user: CurrentUser, input: z.output<typeof moveSt
 
 // ─── Interviews ──────────────────────────────────────────────────────────────
 
-export async function scheduleInterview(user: CurrentUser, input: z.output<typeof interviewSchema>) {
+export async function scheduleInterview(
+  user: CurrentUser,
+  input: z.output<typeof interviewSchema>,
+) {
   assertManage(user);
   const application = await findApplication(input.applicationId);
   if (["HIRED", "REJECTED", "WITHDRAWN"].includes(application.stage)) {
     throw new DomainError("This application is closed.");
   }
   const interviewers = await db.employee.findMany({
-    where: { id: { in: input.interviewerIds }, deletedAt: null, employmentStatus: { not: "TERMINATED" } },
+    where: {
+      id: { in: input.interviewerIds },
+      deletedAt: null,
+      employmentStatus: { not: "TERMINATED" },
+    },
     select: { id: true },
   });
   if (interviewers.length !== new Set(input.interviewerIds).size) {
@@ -191,7 +230,13 @@ export async function scheduleInterview(user: CurrentUser, input: z.output<typeo
     return created;
   });
 
-  await recordAudit({ actorId: user.id, action: "CREATE", entity: "Interview", entityId: interview.id, changes: { applicationId: application.id, scheduledAt } });
+  await recordAudit({
+    actorId: user.id,
+    action: "CREATE",
+    entity: "Interview",
+    entityId: interview.id,
+    changes: { applicationId: application.id, scheduledAt },
+  });
   await notifyEmployees(input.interviewerIds, {
     type: "interview.scheduled",
     title: `Interview: ${application.candidate.firstName} ${application.candidate.lastName}`,
@@ -201,10 +246,22 @@ export async function scheduleInterview(user: CurrentUser, input: z.output<typeo
   return interview;
 }
 
-export async function setInterviewStatus(user: CurrentUser, input: z.output<typeof interviewStatusSchema>) {
+export async function setInterviewStatus(
+  user: CurrentUser,
+  input: z.output<typeof interviewStatusSchema>,
+) {
   assertManage(user);
-  const interview = await db.interview.update({ where: { id: input.id }, data: { status: input.status } });
-  await recordAudit({ actorId: user.id, action: "UPDATE", entity: "Interview", entityId: interview.id, changes: { status: input.status } });
+  const interview = await db.interview.update({
+    where: { id: input.id },
+    data: { status: input.status },
+  });
+  await recordAudit({
+    actorId: user.id,
+    action: "UPDATE",
+    entity: "Interview",
+    entityId: interview.id,
+    changes: { status: input.status },
+  });
 }
 
 /** Whether the user is assigned to interview. */
@@ -230,9 +287,18 @@ export async function submitFeedback(user: CurrentUser, input: z.output<typeof f
       update: data,
       create: { ...data, interviewId, interviewerId: user.employeeId },
     }),
-    db.interview.updateMany({ where: { id: interviewId, status: "SCHEDULED" }, data: { status: "COMPLETED" } }),
+    db.interview.updateMany({
+      where: { id: interviewId, status: "SCHEDULED" },
+      data: { status: "COMPLETED" },
+    }),
   ]);
-  await recordAudit({ actorId: user.id, action: "CREATE", entity: "InterviewFeedback", entityId: interviewId, changes: { rating: data.rating, recommendation: data.recommendation } });
+  await recordAudit({
+    actorId: user.id,
+    action: "CREATE",
+    entity: "InterviewFeedback",
+    entityId: interviewId,
+    changes: { rating: data.rating, recommendation: data.recommendation },
+  });
 }
 
 // ─── Offers and hiring ───────────────────────────────────────────────────────
@@ -240,7 +306,8 @@ export async function submitFeedback(user: CurrentUser, input: z.output<typeof f
 export async function createOffer(user: CurrentUser, input: z.output<typeof offerSchema>) {
   assertManage(user);
   const application = await findApplication(input.applicationId);
-  if (["HIRED", "REJECTED", "WITHDRAWN"].includes(application.stage)) throw new DomainError("This application is closed.");
+  if (["HIRED", "REJECTED", "WITHDRAWN"].includes(application.stage))
+    throw new DomainError("This application is closed.");
   const open = await db.offer.findFirst({
     where: { applicationId: application.id, status: { in: ["DRAFT", "SENT", "ACCEPTED"] } },
   });
@@ -258,11 +325,20 @@ export async function createOffer(user: CurrentUser, input: z.output<typeof offe
       },
     });
     if (application.stage !== "OFFER") {
-      await tx.application.update({ where: { id: application.id }, data: { stage: "OFFER", stageChangedAt: new Date() } });
+      await tx.application.update({
+        where: { id: application.id },
+        data: { stage: "OFFER", stageChangedAt: new Date() },
+      });
     }
     return created;
   });
-  await recordAudit({ actorId: user.id, action: "CREATE", entity: "Offer", entityId: offer.id, changes: { applicationId: application.id, salary: input.salary, currency: input.currency } });
+  await recordAudit({
+    actorId: user.id,
+    action: "CREATE",
+    entity: "Offer",
+    entityId: offer.id,
+    changes: { applicationId: application.id, salary: input.salary, currency: input.currency },
+  });
   return offer;
 }
 
@@ -276,7 +352,9 @@ export async function setOfferStatus(user: CurrentUser, input: z.output<typeof o
   const offer = await db.offer.findUnique({ where: { id: input.id } });
   if (!offer) throw new NotFoundError("Offer");
   if (!OFFER_TRANSITIONS[offer.status]?.includes(input.status)) {
-    throw new DomainError(`An offer that is ${offer.status.toLowerCase()} can't be marked ${input.status.toLowerCase()}.`);
+    throw new DomainError(
+      `An offer that is ${offer.status.toLowerCase()} can't be marked ${input.status.toLowerCase()}.`,
+    );
   }
   const now = new Date();
   await db.offer.update({
@@ -287,7 +365,13 @@ export async function setOfferStatus(user: CurrentUser, input: z.output<typeof o
       ...(["ACCEPTED", "DECLINED"].includes(input.status) ? { respondedAt: now } : {}),
     },
   });
-  await recordAudit({ actorId: user.id, action: "UPDATE", entity: "Offer", entityId: offer.id, changes: { from: offer.status, to: input.status } });
+  await recordAudit({
+    actorId: user.id,
+    action: "UPDATE",
+    entity: "Offer",
+    entityId: offer.id,
+    changes: { from: offer.status, to: input.status },
+  });
 }
 
 /**
@@ -300,16 +384,22 @@ export async function hireCandidate(user: CurrentUser, input: z.output<typeof hi
   if (!can(user, "employee:create")) throw new AuthorizationError("employee:create");
   const application = await findApplication(input.applicationId);
   const { candidate, jobOpening: job } = application;
-  if (application.stage === "HIRED" || candidate.hiredAsEmployeeId) throw new DomainError("This candidate has already been hired.");
-  const offer = await db.offer.findFirst({ where: { applicationId: application.id, status: "ACCEPTED" } });
-  if (!offer?.startDate) throw new DomainError("Record an accepted offer with a start date before hiring.");
+  if (application.stage === "HIRED" || candidate.hiredAsEmployeeId)
+    throw new DomainError("This candidate has already been hired.");
+  const offer = await db.offer.findFirst({
+    where: { applicationId: application.id, status: "ACCEPTED" },
+  });
+  if (!offer?.startDate)
+    throw new DomainError("Record an accepted offer with a start date before hiring.");
 
   const [emailTaken, userTaken] = await Promise.all([
     db.employee.findUnique({ where: { workEmail: candidate.email } }),
     db.user.findUnique({ where: { email: candidate.email } }),
   ]);
   if (emailTaken || (input.createAccount && userTaken)) {
-    throw new DomainError(`${candidate.email} is already used by an employee or account. Update the candidate's email first.`);
+    throw new DomainError(
+      `${candidate.email} is already used by an employee or account. Update the candidate's email first.`,
+    );
   }
 
   const employee = await db.$transaction(async (tx) => {
@@ -348,12 +438,21 @@ export async function hireCandidate(user: CurrentUser, input: z.output<typeof hi
         hireDate: offer.startDate!,
       },
     });
-    await tx.candidate.update({ where: { id: candidate.id }, data: { hiredAsEmployeeId: created.id } });
-    await tx.application.update({ where: { id: application.id }, data: { stage: "HIRED", stageChangedAt: new Date() } });
+    await tx.candidate.update({
+      where: { id: candidate.id },
+      data: { hiredAsEmployeeId: created.id },
+    });
+    await tx.application.update({
+      where: { id: application.id },
+      data: { stage: "HIRED", stageChangedAt: new Date() },
+    });
 
     const hired = await tx.application.count({ where: { jobOpeningId: job.id, stage: "HIRED" } });
     if (hired >= job.headcount) {
-      await tx.jobOpening.update({ where: { id: job.id }, data: { status: "FILLED", closedAt: new Date() } });
+      await tx.jobOpening.update({
+        where: { id: job.id },
+        data: { status: "FILLED", closedAt: new Date() },
+      });
     }
     return created;
   });
@@ -363,10 +462,21 @@ export async function hireCandidate(user: CurrentUser, input: z.output<typeof hi
     action: "CREATE",
     entity: "Employee",
     entityId: employee.id,
-    changes: { hiredFromCandidate: candidate.id, job: job.title, startDate: toDateKey(offer.startDate) },
+    changes: {
+      hiredFromCandidate: candidate.id,
+      job: job.title,
+      startDate: toDateKey(offer.startDate),
+    },
   });
   if (employee.userId) {
-    await sendInvite({ id: employee.userId, email: employee.workEmail, name: `${employee.firstName} ${employee.lastName}` }, await appBaseUrl());
+    await sendInvite(
+      {
+        id: employee.userId,
+        email: employee.workEmail,
+        name: `${employee.firstName} ${employee.lastName}`,
+      },
+      await appBaseUrl(),
+    );
   }
   await notifyEmployees([job.hiringManagerId], {
     type: "recruitment.hired",
@@ -383,7 +493,10 @@ export async function recruitmentMetrics() {
   const yearAgo = new Date(Date.now() - 365 * 86_400_000);
   const [openJobs, openPositions, byStage, hired, upcoming] = await Promise.all([
     db.jobOpening.count({ where: { deletedAt: null, status: "OPEN" } }),
-    db.jobOpening.aggregate({ where: { deletedAt: null, status: "OPEN" }, _sum: { headcount: true } }),
+    db.jobOpening.aggregate({
+      where: { deletedAt: null, status: "OPEN" },
+      _sum: { headcount: true },
+    }),
     db.application.groupBy({
       by: ["stage"],
       where: { jobOpening: { deletedAt: null, status: { in: ["OPEN", "ON_HOLD"] } } },
@@ -395,13 +508,18 @@ export async function recruitmentMetrics() {
     }),
     db.interview.count({ where: { status: "SCHEDULED", scheduledAt: { gte: new Date() } } }),
   ]);
-  const pipeline = (["APPLIED", "SCREENING", "INTERVIEW", "OFFER"] as ApplicationStage[]).map((stage) => ({
-    stage,
-    label: STAGE_LABELS[stage],
-    count: byStage.find((s) => s.stage === stage)?._count._all ?? 0,
-  }));
+  const pipeline = (["APPLIED", "SCREENING", "INTERVIEW", "OFFER"] as ApplicationStage[]).map(
+    (stage) => ({
+      stage,
+      label: STAGE_LABELS[stage],
+      count: byStage.find((s) => s.stage === stage)?._count._all ?? 0,
+    }),
+  );
   const avgTimeToHire = hired.length
-    ? Math.round(hired.reduce((sum, a) => sum + daysBetween(a.appliedAt, a.stageChangedAt), 0) / hired.length)
+    ? Math.round(
+        hired.reduce((sum, a) => sum + daysBetween(a.appliedAt, a.stageChangedAt), 0) /
+          hired.length,
+      )
     : null;
   return {
     openJobs,

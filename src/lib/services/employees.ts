@@ -31,7 +31,10 @@ import { diff } from "./audit-diff";
 // ─── Access helpers ──────────────────────────────────────────────────────────
 
 /** Prisma filter limiting employees to those the user may access under `permission`. */
-export function employeeAccessWhere(user: CurrentUser, permission: Permission): Prisma.EmployeeWhereInput {
+export function employeeAccessWhere(
+  user: CurrentUser,
+  permission: Permission,
+): Prisma.EmployeeWhereInput {
   const filter = employeeScopeFilter(user, permission);
   if (filter.kind === "all") return {};
   if (filter.kind === "employees") return { id: { in: filter.ids } };
@@ -46,7 +49,8 @@ function assertCan(user: CurrentUser, permission: Permission, employeeId?: strin
 
 /** Self-service edits are allowed with profile:update or employee:update. */
 function assertCanEditProfile(user: CurrentUser, employeeId: string) {
-  if (can(user, "profile:update", { employeeId }) || can(user, "employee:update", { employeeId })) return;
+  if (can(user, "profile:update", { employeeId }) || can(user, "employee:update", { employeeId }))
+    return;
   throw new AuthorizationError("profile:update");
 }
 
@@ -69,8 +73,14 @@ export interface EmployeeFilters {
   status?: string;
 }
 
-export function employeeListWhere(user: CurrentUser, filters: EmployeeFilters): Prisma.EmployeeWhereInput {
-  const where: Prisma.EmployeeWhereInput[] = [{ deletedAt: null }, employeeAccessWhere(user, "employee:read")];
+export function employeeListWhere(
+  user: CurrentUser,
+  filters: EmployeeFilters,
+): Prisma.EmployeeWhereInput {
+  const where: Prisma.EmployeeWhereInput[] = [
+    { deletedAt: null },
+    employeeAccessWhere(user, "employee:read"),
+  ];
   const q = filters.q?.trim();
   if (q) {
     const terms = q.split(/\s+/).slice(0, 4);
@@ -95,7 +105,10 @@ export function employeeListWhere(user: CurrentUser, filters: EmployeeFilters): 
   return { AND: where };
 }
 
-function orderBy(sort: EmployeeSort, dir: "asc" | "desc"): Prisma.EmployeeOrderByWithRelationInput[] {
+function orderBy(
+  sort: EmployeeSort,
+  dir: "asc" | "desc",
+): Prisma.EmployeeOrderByWithRelationInput[] {
   switch (sort) {
     case "number":
       return [{ employeeNumber: dir }];
@@ -112,7 +125,12 @@ function orderBy(sort: EmployeeSort, dir: "asc" | "desc"): Prisma.EmployeeOrderB
 
 export async function listEmployees(
   user: CurrentUser,
-  params: EmployeeFilters & { sort: EmployeeSort; dir: "asc" | "desc"; page: number; pageSize: number },
+  params: EmployeeFilters & {
+    sort: EmployeeSort;
+    dir: "asc" | "desc";
+    page: number;
+    pageSize: number;
+  },
 ) {
   const where = employeeListWhere(user, params);
   const [rows, total] = await Promise.all([
@@ -150,9 +168,15 @@ async function assertReferences(input: {
   managerId: string | null;
 }) {
   const [department, position, location, manager] = await Promise.all([
-    input.departmentId ? db.department.findFirst({ where: { id: input.departmentId, deletedAt: null } }) : true,
-    input.positionId ? db.position.findFirst({ where: { id: input.positionId, deletedAt: null } }) : true,
-    input.locationId ? db.location.findFirst({ where: { id: input.locationId, deletedAt: null } }) : true,
+    input.departmentId
+      ? db.department.findFirst({ where: { id: input.departmentId, deletedAt: null } })
+      : true,
+    input.positionId
+      ? db.position.findFirst({ where: { id: input.positionId, deletedAt: null } })
+      : true,
+    input.locationId
+      ? db.location.findFirst({ where: { id: input.locationId, deletedAt: null } })
+      : true,
     input.managerId
       ? db.employee.findFirst({
           where: { id: input.managerId, deletedAt: null, employmentStatus: { not: "TERMINATED" } },
@@ -167,14 +191,23 @@ async function assertReferences(input: {
 
 async function assertNoReportingCycle(employeeId: string, managerId: string | null) {
   if (!managerId) return;
-  const rows = await db.employee.findMany({ where: { deletedAt: null }, select: { id: true, managerId: true } });
+  const rows = await db.employee.findMany({
+    where: { deletedAt: null },
+    select: { id: true, managerId: true },
+  });
   const parentOf = new Map(rows.map((r) => [r.id, r.managerId]));
   if (wouldCreateCycle(employeeId, managerId, parentOf)) {
-    throw new DomainError("An employee can't report to themselves or to someone in their own reporting line.", "managerId");
+    throw new DomainError(
+      "An employee can't report to themselves or to someone in their own reporting line.",
+      "managerId",
+    );
   }
 }
 
-export async function createEmployee(user: CurrentUser, input: z.output<typeof createEmployeeSchema>) {
+export async function createEmployee(
+  user: CurrentUser,
+  input: z.output<typeof createEmployeeSchema>,
+) {
   assertCan(user, "employee:create");
   await assertReferences(input);
 
@@ -223,14 +256,21 @@ export async function createEmployee(user: CurrentUser, input: z.output<typeof c
 
   if (employee.userId) {
     await sendInvite(
-      { id: employee.userId, email: employee.workEmail, name: `${employee.firstName} ${employee.lastName}` },
+      {
+        id: employee.userId,
+        email: employee.workEmail,
+        name: `${employee.firstName} ${employee.lastName}`,
+      },
       await appBaseUrl(),
     );
   }
   return employee;
 }
 
-export async function updateEmployee(user: CurrentUser, input: z.output<typeof updateEmployeeSchema>) {
+export async function updateEmployee(
+  user: CurrentUser,
+  input: z.output<typeof updateEmployeeSchema>,
+) {
   const { id, dateOfBirth, hireDate, employeeNumber, ...fields } = input;
   assertCan(user, "employee:update", id);
   const existing = await findActive(id);
@@ -259,7 +299,14 @@ export async function updateEmployee(user: CurrentUser, input: z.output<typeof u
   });
 
   const changes = diff(existing, data);
-  if (changes) await recordAudit({ actorId: user.id, action: "UPDATE", entity: "Employee", entityId: id, changes });
+  if (changes)
+    await recordAudit({
+      actorId: user.id,
+      action: "UPDATE",
+      entity: "Employee",
+      entityId: id,
+      changes,
+    });
 }
 
 export async function updateProfile(user: CurrentUser, input: z.output<typeof profileSchema>) {
@@ -268,12 +315,22 @@ export async function updateProfile(user: CurrentUser, input: z.output<typeof pr
   const existing = await findActive(id);
   await db.employee.update({ where: { id }, data });
   const changes = diff(existing, data);
-  if (changes) await recordAudit({ actorId: user.id, action: "UPDATE", entity: "Employee", entityId: id, changes });
+  if (changes)
+    await recordAudit({
+      actorId: user.id,
+      action: "UPDATE",
+      entity: "Employee",
+      entityId: id,
+      changes,
+    });
 }
 
 // ─── Emergency contacts ──────────────────────────────────────────────────────
 
-export async function saveEmergencyContact(user: CurrentUser, input: z.output<typeof emergencyContactSchema>) {
+export async function saveEmergencyContact(
+  user: CurrentUser,
+  input: z.output<typeof emergencyContactSchema>,
+) {
   const { id, employeeId, ...data } = input;
   assertCanEditProfile(user, employeeId);
   await findActive(employeeId);
@@ -322,10 +379,19 @@ export async function uploadPhoto(user: CurrentUser, input: z.output<typeof file
   if (employee.photoUrl?.startsWith("/api/files/")) {
     await deleteStoredFile(employee.photoUrl.slice("/api/files/".length));
   }
-  await recordAudit({ actorId: user.id, action: "UPDATE", entity: "Employee", entityId: employee.id, changes: { photo: "updated" } });
+  await recordAudit({
+    actorId: user.id,
+    action: "UPDATE",
+    entity: "Employee",
+    entityId: employee.id,
+    changes: { photo: "updated" },
+  });
 }
 
-export async function uploadDocument(user: CurrentUser, input: z.output<typeof documentUploadSchema>) {
+export async function uploadDocument(
+  user: CurrentUser,
+  input: z.output<typeof documentUploadSchema>,
+) {
   assertCan(user, "employee:update", input.employeeId);
   await findActive(input.employeeId);
   const stored = await saveFile("documents", input.file);
@@ -369,23 +435,36 @@ export async function deleteDocument(user: CurrentUser, id: string) {
 export async function offboardEmployee(user: CurrentUser, input: z.output<typeof offboardSchema>) {
   assertCan(user, "employee:delete", input.id);
   const employee = await findActive(input.id);
-  if (employee.employmentStatus === "TERMINATED") throw new DomainError("This employee is already offboarded.");
+  if (employee.employmentStatus === "TERMINATED")
+    throw new DomainError("This employee is already offboarded.");
   if (input.terminationDate < employee.hireDate.toISOString().slice(0, 10)) {
     throw new DomainError("The last working day can't be before the hire date.", "terminationDate");
   }
 
   const newManagerId = input.reassignReportsToId ?? employee.managerId;
-  if (newManagerId === employee.id) throw new DomainError("Choose someone else to take over the reports.", "reassignReportsToId");
+  if (newManagerId === employee.id)
+    throw new DomainError("Choose someone else to take over the reports.", "reassignReportsToId");
   if (input.reassignReportsToId) {
-    await assertReferences({ departmentId: null, positionId: null, locationId: null, managerId: input.reassignReportsToId });
+    await assertReferences({
+      departmentId: null,
+      positionId: null,
+      locationId: null,
+      managerId: input.reassignReportsToId,
+    });
   }
 
   const reports = await db.employee.count({ where: { managerId: employee.id, deletedAt: null } });
 
   await db.$transaction([
-    db.employee.updateMany({ where: { managerId: employee.id }, data: { managerId: newManagerId } }),
+    db.employee.updateMany({
+      where: { managerId: employee.id },
+      data: { managerId: newManagerId },
+    }),
     db.department.updateMany({ where: { headId: employee.id }, data: { headId: null } }),
-    db.jobOpening.updateMany({ where: { hiringManagerId: employee.id }, data: { hiringManagerId: newManagerId } }),
+    db.jobOpening.updateMany({
+      where: { hiringManagerId: employee.id },
+      data: { hiringManagerId: newManagerId },
+    }),
     db.leaveRequest.updateMany({
       where: { employeeId: employee.id, status: { in: ["PENDING", "MANAGER_APPROVED"] } },
       data: { status: "CANCELLED", decisionComment: "Cancelled on offboarding" },
@@ -447,7 +526,10 @@ interface PreparedRow {
 
 async function prepareImport(records: Record<string, string>[]) {
   const [departments, positions, locations, existing] = await Promise.all([
-    db.department.findMany({ where: { deletedAt: null }, select: { id: true, code: true, name: true } }),
+    db.department.findMany({
+      where: { deletedAt: null },
+      select: { id: true, code: true, name: true },
+    }),
     db.position.findMany({ where: { deletedAt: null }, select: { id: true, code: true } }),
     db.location.findMany({ where: { deletedAt: null }, select: { id: true, name: true } }),
     db.employee.findMany({ select: { id: true, employeeNumber: true, workEmail: true } }),
@@ -473,11 +555,13 @@ async function prepareImport(records: Record<string, string>[]) {
     if (!firstName) problems.push("first_name is required");
     if (!lastName) problems.push("last_name is required");
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) problems.push("work_email is invalid");
-    else if (existingEmails.has(email) || fileEmails.has(email)) problems.push(`work_email ${email} already exists`);
+    else if (existingEmails.has(email) || fileEmails.has(email))
+      problems.push(`work_email ${email} already exists`);
 
     let number = (r.employee_number ?? "").toUpperCase();
     if (number) {
-      if (existingNumbers.has(number) || fileNumbers.has(number)) problems.push(`employee_number ${number} already exists`);
+      if (existingNumbers.has(number) || fileNumbers.has(number))
+        problems.push(`employee_number ${number} already exists`);
     } else {
       number = `E${String(nextNumber++).padStart(4, "0")}`;
     }
@@ -490,7 +574,8 @@ async function prepareImport(records: Record<string, string>[]) {
     if (r.location && !locationId) problems.push(`unknown location ${r.location}`);
 
     const type = (r.employment_type || "FULL_TIME").toUpperCase().replace(/[\s-]/g, "_");
-    if (!(EMPLOYMENT_TYPES as readonly string[]).includes(type)) problems.push(`invalid employment_type ${r.employment_type}`);
+    if (!(EMPLOYMENT_TYPES as readonly string[]).includes(type))
+      problems.push(`invalid employment_type ${r.employment_type}`);
     const status = (r.employment_status || "ACTIVE").toUpperCase().replace(/[\s-]/g, "_");
     if (!(EMPLOYMENT_STATUSES as readonly string[]).includes(status) || status === "TERMINATED") {
       problems.push(`invalid employment_status ${r.employment_status}`);
@@ -541,7 +626,10 @@ async function prepareImport(records: Record<string, string>[]) {
   return { prepared, errors: errors.sort((a, b) => a.row - b.row), existing, deptByCode };
 }
 
-export async function previewImport(user: CurrentUser, records: Record<string, string>[]): Promise<ImportPreview> {
+export async function previewImport(
+  user: CurrentUser,
+  records: Record<string, string>[],
+): Promise<ImportPreview> {
   assertCan(user, "employee:create");
   const { prepared, errors, deptByCode } = await prepareImport(records);
   const deptNames = new Map([...deptByCode.values()].map((d) => [d.id, d.name]));
@@ -582,6 +670,11 @@ export async function importEmployees(user: CurrentUser, records: Record<string,
     return prepared.length;
   });
 
-  await recordAudit({ actorId: user.id, action: "CREATE", entity: "Employee", changes: { imported: created } });
+  await recordAudit({
+    actorId: user.id,
+    action: "CREATE",
+    entity: "Employee",
+    changes: { imported: created },
+  });
   return created;
 }

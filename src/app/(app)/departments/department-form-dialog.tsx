@@ -2,7 +2,12 @@
 
 import { useState } from "react";
 
-import { type Option, SelectField, TextField, TextareaField } from "@/components/shared/form-fields";
+import {
+  type Option,
+  SelectField,
+  TextField,
+  TextareaField,
+} from "@/components/shared/form-fields";
 import { SubmitButton } from "@/components/shared/submit-button";
 import { Button } from "@/components/ui/button";
 import {
@@ -42,7 +47,9 @@ export function DepartmentFormDialog({
       headId: department?.headId ?? "",
     },
     action: (values) =>
-      department ? updateDepartmentAction({ ...values, id: department.id }) : createDepartmentAction(values),
+      department
+        ? updateDepartmentAction({ ...values, id: department.id })
+        : createDepartmentAction(values),
     onSuccess: (_data, f) => {
       setOpen(false);
       if (!department) f.reset();
@@ -55,7 +62,9 @@ export function DepartmentFormDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{department ? "Edit department" : "New department"}</DialogTitle>
-          <DialogDescription>Departments can be nested to mirror your organization.</DialogDescription>
+          <DialogDescription>
+            Departments can be nested to mirror your organization.
+          </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={onSubmit} className="grid gap-4" noValidate>
@@ -70,13 +79,21 @@ export function DepartmentFormDialog({
               noneLabel="None (top level)"
               options={departments.filter((d) => d.value !== department?.id)}
             />
-            <SelectField control={form.control} name="headId" label="Department head" noneLabel="No head" options={employees} />
+            <SelectField
+              control={form.control}
+              name="headId"
+              label="Department head"
+              noneLabel="No head"
+              options={employees}
+            />
             <TextareaField control={form.control} name="description" label="Description" rows={3} />
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>
                 Cancel
               </Button>
-              <SubmitButton pending={pending}>{department ? "Save changes" : "Create department"}</SubmitButton>
+              <SubmitButton pending={pending}>
+                {department ? "Save changes" : "Create department"}
+              </SubmitButton>
             </DialogFooter>
           </form>
         </Form>

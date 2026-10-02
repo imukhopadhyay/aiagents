@@ -14,7 +14,10 @@ export default async function NewEmployeePage() {
   const options = await orgOptions();
   return (
     <div className="mx-auto grid max-w-3xl gap-6">
-      <PageHeader title="New employee" description="Add someone to the organization and invite them to sign in." />
+      <PageHeader
+        title="New employee"
+        description="Add someone to the organization and invite them to sign in."
+      />
       <EmployeeForm options={options} canAssignRoles={can(user, "user:manage")} />
     </div>
   );

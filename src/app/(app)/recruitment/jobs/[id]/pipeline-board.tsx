@@ -56,7 +56,8 @@ export interface PipelineCard {
 
 type Column = (typeof PIPELINE_STAGES)[number] | "CLOSED";
 const COLUMNS: Column[] = [...PIPELINE_STAGES, "CLOSED"];
-const columnOf = (stage: Stage): Column => (stage === "REJECTED" || stage === "WITHDRAWN" ? "CLOSED" : stage);
+const columnOf = (stage: Stage): Column =>
+  stage === "REJECTED" || stage === "WITHDRAWN" ? "CLOSED" : stage;
 
 function CardBody({
   card,
@@ -75,7 +76,10 @@ function CardBody({
         {dragHandle}
         <PersonAvatar name={card.name} className="size-7" />
         <div className="min-w-0 flex-1">
-          <Link href={`/recruitment/candidates/${card.candidateId}`} className="block truncate text-sm font-medium hover:underline">
+          <Link
+            href={`/recruitment/candidates/${card.candidateId}`}
+            className="block truncate text-sm font-medium hover:underline"
+          >
             {card.name}
           </Link>
           <p className="text-muted-foreground truncate text-xs">{card.email}</p>
@@ -83,7 +87,12 @@ function CardBody({
         {canManage && card.stage !== "HIRED" && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="size-7" aria-label={`Move ${card.name}`}>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-7"
+                aria-label={`Move ${card.name}`}
+              >
                 <MoreHorizontal />
               </Button>
             </DropdownMenuTrigger>
@@ -100,7 +109,11 @@ function CardBody({
               {(["REJECTED", "WITHDRAWN"] as Stage[])
                 .filter((s) => canMoveStage(card.stage, s))
                 .map((s) => (
-                  <DropdownMenuItem key={s} variant={s === "REJECTED" ? "destructive" : "default"} onSelect={() => onMove(card, s)}>
+                  <DropdownMenuItem
+                    key={s}
+                    variant={s === "REJECTED" ? "destructive" : "default"}
+                    onSelect={() => onMove(card, s)}
+                  >
                     {STAGE_LABELS[s]}
                   </DropdownMenuItem>
                 ))}
@@ -124,20 +137,32 @@ function CardBody({
           </Badge>
         ))}
       </div>
-      {card.rejectionReason && <p className="text-muted-foreground text-xs italic">“{card.rejectionReason}”</p>}
+      {card.rejectionReason && (
+        <p className="text-muted-foreground text-xs italic">“{card.rejectionReason}”</p>
+      )}
     </div>
   );
 }
 
-function DraggableCard(props: { card: PipelineCard; canManage: boolean; onMove: (card: PipelineCard, stage: Stage) => void }) {
+function DraggableCard(props: {
+  card: PipelineCard;
+  canManage: boolean;
+  onMove: (card: PipelineCard, stage: Stage) => void;
+}) {
   const draggable = props.canManage && props.card.stage !== "HIRED";
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: props.card.id,
     disabled: !draggable,
   });
-  const style = transform ? { transform: `translate3d(${transform.x}px, ${transform.y}px, 0)` } : undefined;
+  const style = transform
+    ? { transform: `translate3d(${transform.x}px, ${transform.y}px, 0)` }
+    : undefined;
   return (
-    <div ref={setNodeRef} style={style} className={cn(isDragging && "relative z-50 opacity-80 shadow-lg")}>
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={cn(isDragging && "relative z-50 opacity-80 shadow-lg")}
+    >
       <CardBody
         {...props}
         dragHandle={
@@ -158,7 +183,15 @@ function DraggableCard(props: { card: PipelineCard; canManage: boolean; onMove: 
   );
 }
 
-function StageColumn({ column, children, count }: { column: Column; children: React.ReactNode; count: number }) {
+function StageColumn({
+  column,
+  children,
+  count,
+}: {
+  column: Column;
+  children: React.ReactNode;
+  count: number;
+}) {
   const { setNodeRef, isOver } = useDroppable({ id: column });
   return (
     <div
@@ -169,7 +202,9 @@ function StageColumn({ column, children, count }: { column: Column; children: Re
       )}
     >
       <div className="flex items-center justify-between px-1 py-1">
-        <h3 className="text-sm font-medium">{column === "CLOSED" ? "Rejected / withdrawn" : STAGE_LABELS[column]}</h3>
+        <h3 className="text-sm font-medium">
+          {column === "CLOSED" ? "Rejected / withdrawn" : STAGE_LABELS[column]}
+        </h3>
         <Badge variant="secondary">{count}</Badge>
       </div>
       <div className="grid min-h-24 content-start gap-2">{children}</div>
@@ -178,13 +213,18 @@ function StageColumn({ column, children, count }: { column: Column; children: Re
 }
 
 export function PipelineBoard({ cards, canManage }: { cards: PipelineCard[]; canManage: boolean }) {
-  const [optimistic, applyMove] = useOptimistic(cards, (state, move: { id: string; stage: Stage }) =>
-    state.map((c) => (c.id === move.id ? { ...c, stage: move.stage } : c)),
+  const [optimistic, applyMove] = useOptimistic(
+    cards,
+    (state, move: { id: string; stage: Stage }) =>
+      state.map((c) => (c.id === move.id ? { ...c, stage: move.stage } : c)),
   );
   const [, startTransition] = useTransition();
   const [closing, setClosing] = useState<{ card: PipelineCard; stage: Stage } | null>(null);
   const [reason, setReason] = useState("");
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }), useSensor(KeyboardSensor));
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor),
+  );
 
   function commit(card: PipelineCard, stage: Stage, rejectionReason?: string) {
     startTransition(async () => {
@@ -197,7 +237,11 @@ export function PipelineBoard({ cards, canManage }: { cards: PipelineCard[]; can
 
   function move(card: PipelineCard, stage: Stage) {
     if (!canMoveStage(card.stage, stage)) {
-      toast.error(stage === "HIRED" ? "Hire candidates from their accepted offer." : "That move isn't allowed.");
+      toast.error(
+        stage === "HIRED"
+          ? "Hire candidates from their accepted offer."
+          : "That move isn't allowed.",
+      );
       return;
     }
     if (stage === "REJECTED" || stage === "WITHDRAWN") {
@@ -236,13 +280,22 @@ export function PipelineBoard({ cards, canManage }: { cards: PipelineCard[]; can
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {closing?.stage === "WITHDRAWN" ? "Mark as withdrawn" : "Reject"} {closing?.card.name}?
+              {closing?.stage === "WITHDRAWN" ? "Mark as withdrawn" : "Reject"} {closing?.card.name}
+              ?
             </DialogTitle>
-            <DialogDescription>The application will move out of the active pipeline.</DialogDescription>
+            <DialogDescription>
+              The application will move out of the active pipeline.
+            </DialogDescription>
           </DialogHeader>
           <div className="grid gap-2">
             <Label htmlFor="close-reason">Reason (optional)</Label>
-            <Textarea id="close-reason" value={reason} onChange={(e) => setReason(e.target.value)} rows={3} maxLength={500} />
+            <Textarea
+              id="close-reason"
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              rows={3}
+              maxLength={500}
+            />
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setClosing(null)}>

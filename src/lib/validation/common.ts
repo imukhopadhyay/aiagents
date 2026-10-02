@@ -14,7 +14,11 @@ export const optionalText = (max = 500) =>
     .transform((v) => v ?? null);
 
 export const requiredText = (label: string, max = 200) =>
-  z.string().trim().min(1, { error: `${label} is required` }).max(max);
+  z
+    .string()
+    .trim()
+    .min(1, { error: `${label} is required` })
+    .max(max);
 
 /** Optional id from a select: "" → null. */
 export const optionalId = z

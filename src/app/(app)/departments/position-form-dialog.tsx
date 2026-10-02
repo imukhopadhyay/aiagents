@@ -2,7 +2,12 @@
 
 import { useState } from "react";
 
-import { type Option, SelectField, TextField, TextareaField } from "@/components/shared/form-fields";
+import {
+  type Option,
+  SelectField,
+  TextField,
+  TextareaField,
+} from "@/components/shared/form-fields";
 import { SubmitButton } from "@/components/shared/submit-button";
 import { Button } from "@/components/ui/button";
 import {
@@ -39,7 +44,9 @@ export function PositionFormDialog({
       departmentId: position?.departmentId ?? "",
     },
     action: (values) =>
-      position ? updatePositionAction({ ...values, id: position.id }) : createPositionAction(values),
+      position
+        ? updatePositionAction({ ...values, id: position.id })
+        : createPositionAction(values),
     onSuccess: (_d, f) => {
       setOpen(false);
       if (!position) f.reset();
@@ -60,15 +67,31 @@ export function PositionFormDialog({
               <TextField control={form.control} name="code" label="Code" placeholder="SWE" />
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
-              <SelectField control={form.control} name="departmentId" label="Department" noneLabel="Any department" options={departments} />
-              <TextField control={form.control} name="level" label="Level" type="number" min={1} max={20} description="Seniority band (1–20)" />
+              <SelectField
+                control={form.control}
+                name="departmentId"
+                label="Department"
+                noneLabel="Any department"
+                options={departments}
+              />
+              <TextField
+                control={form.control}
+                name="level"
+                label="Level"
+                type="number"
+                min={1}
+                max={20}
+                description="Seniority band (1–20)"
+              />
             </div>
             <TextareaField control={form.control} name="description" label="Description" rows={3} />
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>
                 Cancel
               </Button>
-              <SubmitButton pending={pending}>{position ? "Save changes" : "Create position"}</SubmitButton>
+              <SubmitButton pending={pending}>
+                {position ? "Save changes" : "Create position"}
+              </SubmitButton>
             </DialogFooter>
           </form>
         </Form>

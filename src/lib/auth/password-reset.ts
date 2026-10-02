@@ -39,7 +39,10 @@ export async function createPasswordLink(
 export const INVITE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
 /** Email a new user a link to set their password. */
-export async function sendInvite(user: { id: string; email: string; name: string | null }, baseUrl: string) {
+export async function sendInvite(
+  user: { id: string; email: string; name: string | null },
+  baseUrl: string,
+) {
   const url = await createPasswordLink(user.id, baseUrl, INVITE_TTL_MS);
   await sendMail({
     to: user.email,

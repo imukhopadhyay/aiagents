@@ -11,8 +11,20 @@ import {
   requiredText,
 } from "./common";
 
-export const EMPLOYMENT_STATUSES = ["ACTIVE", "PROBATION", "ON_LEAVE", "SUSPENDED", "TERMINATED"] as const;
-export const EMPLOYMENT_TYPES = ["FULL_TIME", "PART_TIME", "CONTRACT", "INTERN", "TEMPORARY"] as const;
+export const EMPLOYMENT_STATUSES = [
+  "ACTIVE",
+  "PROBATION",
+  "ON_LEAVE",
+  "SUSPENDED",
+  "TERMINATED",
+] as const;
+export const EMPLOYMENT_TYPES = [
+  "FULL_TIME",
+  "PART_TIME",
+  "CONTRACT",
+  "INTERN",
+  "TEMPORARY",
+] as const;
 export const DOCUMENT_CATEGORIES = [
   "CONTRACT",
   "IDENTIFICATION",
@@ -34,7 +46,11 @@ const phone = z
 const employeeFields = {
   firstName: requiredText("First name", 100),
   lastName: requiredText("Last name", 100),
-  workEmail: z.string().trim().toLowerCase().pipe(z.email({ error: "Enter a valid email" })),
+  workEmail: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .pipe(z.email({ error: "Enter a valid email" })),
   personalEmail: optionalEmail,
   phone,
   dateOfBirth: optionalDateKey,

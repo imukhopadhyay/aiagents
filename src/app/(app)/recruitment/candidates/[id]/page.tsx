@@ -52,7 +52,9 @@ export default async function CandidatePage({ params }: PageProps<"/recruitment/
             orderBy: { scheduledAt: "asc" },
             include: {
               interviewers: { select: { id: true, firstName: true, lastName: true } },
-              feedback: { include: { interviewer: { select: { firstName: true, lastName: true } } } },
+              feedback: {
+                include: { interviewer: { select: { firstName: true, lastName: true } } },
+              },
             },
           },
           offers: { orderBy: { createdAt: "desc" } },
@@ -97,7 +99,9 @@ export default async function CandidatePage({ params }: PageProps<"/recruitment/
           {canManage && !candidate.hiredAs && (
             <ApplyDialog
               candidateId={candidate.id}
-              jobs={openJobs.filter((j) => !appliedJobIds.has(j.id)).map((j) => ({ value: j.id, label: j.title }))}
+              jobs={openJobs
+                .filter((j) => !appliedJobIds.has(j.id))
+                .map((j) => ({ value: j.id, label: j.title }))}
             />
           )}
           {canManage && (
@@ -131,7 +135,12 @@ export default async function CandidatePage({ params }: PageProps<"/recruitment/
                 {
                   label: "Link",
                   value: candidate.linkedinUrl ? (
-                    <a href={candidate.linkedinUrl} target="_blank" rel="noreferrer noopener" className="inline-flex items-center gap-1 underline-offset-4 hover:underline">
+                    <a
+                      href={candidate.linkedinUrl}
+                      target="_blank"
+                      rel="noreferrer noopener"
+                      className="inline-flex items-center gap-1 underline-offset-4 hover:underline"
+                    >
                       {new URL(candidate.linkedinUrl).hostname} <ExternalLink className="size-3" />
                     </a>
                   ) : null,
@@ -162,21 +171,32 @@ export default async function CandidatePage({ params }: PageProps<"/recruitment/
               ) : (
                 <span className="text-muted-foreground text-sm">No resume uploaded.</span>
               )}
-              {canManage && <ResumeUpload candidateId={candidate.id} hasResume={Boolean(candidate.resumeKey)} />}
+              {canManage && (
+                <ResumeUpload candidateId={candidate.id} hasResume={Boolean(candidate.resumeKey)} />
+              )}
             </div>
-            {candidate.notes && <p className="text-muted-foreground border-t pt-4 text-sm whitespace-pre-line">{candidate.notes}</p>}
+            {candidate.notes && (
+              <p className="text-muted-foreground border-t pt-4 text-sm whitespace-pre-line">
+                {candidate.notes}
+              </p>
+            )}
           </CardContent>
         </Card>
 
         <div className="grid content-start gap-6 lg:col-span-2">
           {candidate.applications.length === 0 && (
-            <EmptyState title="No applications" description="Add this candidate to a job to start tracking them." />
+            <EmptyState
+              title="No applications"
+              description="Add this candidate to a job to start tracking them."
+            />
           )}
           {candidate.applications.map((application) => {
             const job = application.jobOpening;
             const tz = job.location?.timezone ?? "UTC";
             const closed = ["HIRED", "REJECTED", "WITHDRAWN"].includes(application.stage);
-            const activeOffer = application.offers.find((o) => ["DRAFT", "SENT", "ACCEPTED"].includes(o.status));
+            const activeOffer = application.offers.find((o) =>
+              ["DRAFT", "SENT", "ACCEPTED"].includes(o.status),
+            );
             return (
               <Card key={application.id}>
                 <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-2">
@@ -187,7 +207,8 @@ export default async function CandidatePage({ params }: PageProps<"/recruitment/
                       </Link>
                     </CardTitle>
                     <CardDescription>
-                      Applied {formatDate(application.appliedAt)} · in stage since {formatDate(application.stageChangedAt)}
+                      Applied {formatDate(application.appliedAt)} · in stage since{" "}
+                      {formatDate(application.stageChangedAt)}
                       {application.rejectionReason ? ` · “${application.rejectionReason}”` : ""}
                     </CardDescription>
                   </div>
@@ -213,27 +234,43 @@ export default async function CandidatePage({ params }: PageProps<"/recruitment/
                         {application.interviews.map((interview) => (
                           <li key={interview.id} className="rounded-lg border p-3 text-sm">
                             <div className="flex flex-wrap items-center justify-between gap-2">
-                              <Link href={`/interviews/${interview.id}`} className="font-medium hover:underline">
-                                {interview.type === "HR" ? "HR" : labelize(interview.type)} interview ·{" "}
-                                {formatDateTime(interview.scheduledAt, tz)}
+                              <Link
+                                href={`/interviews/${interview.id}`}
+                                className="font-medium hover:underline"
+                              >
+                                {interview.type === "HR" ? "HR" : labelize(interview.type)}{" "}
+                                interview · {formatDateTime(interview.scheduledAt, tz)}
                               </Link>
                               <StatusBadge status={interview.status} />
                             </div>
                             <p className="text-muted-foreground text-xs">
-                              {interview.durationMinutes} min · {interview.interviewers.map(fullName).join(", ")}
+                              {interview.durationMinutes} min ·{" "}
+                              {interview.interviewers.map(fullName).join(", ")}
                               {interview.location ? ` · ${interview.location}` : ""}
                             </p>
                             {interview.feedback.length > 0 && (
                               <ul className="mt-2 grid gap-1 border-t pt-2">
                                 {interview.feedback.map((f) => (
-                                  <li key={f.id} className="flex flex-wrap items-center gap-2 text-xs">
+                                  <li
+                                    key={f.id}
+                                    className="flex flex-wrap items-center gap-2 text-xs"
+                                  >
                                     <span className="font-medium">{fullName(f.interviewer)}</span>
                                     <span className="flex items-center gap-0.5">
                                       {Array.from({ length: 5 }, (_, i) => (
-                                        <Star key={i} className={i < f.rating ? "size-3 fill-amber-400 text-amber-400" : "text-muted-foreground size-3"} />
+                                        <Star
+                                          key={i}
+                                          className={
+                                            i < f.rating
+                                              ? "size-3 fill-amber-400 text-amber-400"
+                                              : "text-muted-foreground size-3"
+                                          }
+                                        />
                                       ))}
                                     </span>
-                                    <Badge variant="outline">{RECOMMENDATION_LABEL[f.recommendation ?? ""] ?? "—"}</Badge>
+                                    <Badge variant="outline">
+                                      {RECOMMENDATION_LABEL[f.recommendation ?? ""] ?? "—"}
+                                    </Badge>
                                   </li>
                                 ))}
                               </ul>
@@ -247,33 +284,49 @@ export default async function CandidatePage({ params }: PageProps<"/recruitment/
                   <section className="grid gap-2">
                     <div className="flex items-center justify-between gap-2">
                       <h3 className="text-sm font-medium">Offers</h3>
-                      {canManage && !closed && !activeOffer && <OfferDialog
+                      {canManage && !closed && !activeOffer && (
+                        <OfferDialog
                           applicationId={application.id}
                           defaultStartDate={addDays(today, 30)}
                           defaultExpiry={addDays(today, 7)}
-                        />}
+                        />
+                      )}
                     </div>
                     {application.offers.length === 0 ? (
                       <p className="text-muted-foreground text-sm">No offers yet.</p>
                     ) : (
                       <ul className="grid gap-2">
                         {application.offers.map((offer) => (
-                          <li key={offer.id} className="flex flex-wrap items-center justify-between gap-3 rounded-lg border p-3 text-sm">
+                          <li
+                            key={offer.id}
+                            className="flex flex-wrap items-center justify-between gap-3 rounded-lg border p-3 text-sm"
+                          >
                             <div>
                               <p className="font-medium">
-                                {formatMoney(offer.salary, offer.currency)} / year · starts {formatDate(offer.startDate)}
+                                {formatMoney(offer.salary, offer.currency)} / year · starts{" "}
+                                {formatDate(offer.startDate)}
                               </p>
                               <p className="text-muted-foreground text-xs">
-                                {offer.expiresAt ? `Expires ${formatDate(offer.expiresAt)}` : "No expiry"}
+                                {offer.expiresAt
+                                  ? `Expires ${formatDate(offer.expiresAt)}`
+                                  : "No expiry"}
                                 {offer.sentAt ? ` · sent ${formatDate(offer.sentAt)}` : ""}
                               </p>
                             </div>
                             <div className="flex flex-wrap items-center gap-2">
                               <StatusBadge status={offer.status} />
-                              {canManage && <OfferStatusButtons id={offer.id} status={offer.status} />}
-                              {canHire && offer.status === "ACCEPTED" && application.stage !== "HIRED" && (
-                                <HireDialog applicationId={application.id} name={name} email={candidate.email} />
+                              {canManage && (
+                                <OfferStatusButtons id={offer.id} status={offer.status} />
                               )}
+                              {canHire &&
+                                offer.status === "ACCEPTED" &&
+                                application.stage !== "HIRED" && (
+                                  <HireDialog
+                                    applicationId={application.id}
+                                    name={name}
+                                    email={candidate.email}
+                                  />
+                                )}
                             </div>
                           </li>
                         ))}

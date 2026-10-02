@@ -17,7 +17,13 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 import { applyToJobAction } from "../../actions";
 
@@ -51,7 +57,10 @@ export function AddCandidateDialog({ jobId, candidates }: { jobId: string; candi
           <DialogTitle>Add a candidate to this job</DialogTitle>
           <DialogDescription>
             Choose someone already in your candidate pool, or{" "}
-            <Link className="underline underline-offset-4" href={`/recruitment/candidates/new?job=${jobId}`}>
+            <Link
+              className="underline underline-offset-4"
+              href={`/recruitment/candidates/new?job=${jobId}`}
+            >
               create a new candidate
             </Link>
             .
@@ -61,7 +70,11 @@ export function AddCandidateDialog({ jobId, candidates }: { jobId: string; candi
           <Label htmlFor="candidate">Candidate</Label>
           <Select value={candidateId} onValueChange={setCandidateId}>
             <SelectTrigger id="candidate" className="w-full">
-              <SelectValue placeholder={candidates.length ? "Choose a candidate" : "Everyone has already applied"} />
+              <SelectValue
+                placeholder={
+                  candidates.length ? "Choose a candidate" : "Everyone has already applied"
+                }
+              />
             </SelectTrigger>
             <SelectContent>
               {candidates.map((c) => (

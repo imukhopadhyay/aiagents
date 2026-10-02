@@ -37,7 +37,11 @@ export default async function OrgChartPage({ searchParams }: PageProps<"/org-cha
         department: { select: { name: true } },
       },
     }),
-    db.department.findMany({ where: { deletedAt: null }, orderBy: { name: "asc" }, select: { id: true, name: true } }),
+    db.department.findMany({
+      where: { deletedAt: null },
+      orderBy: { name: "asc" },
+      select: { id: true, name: true },
+    }),
   ]);
 
   const people: ChartPerson[] = employees.map((e) => ({

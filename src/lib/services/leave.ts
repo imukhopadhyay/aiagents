@@ -61,7 +61,11 @@ export interface BalanceSummary {
 }
 
 /** Balances for every active leave type with an allowance, for one employee and year. */
-export async function getBalances(employeeId: string, year: number, asOfMonth?: number): Promise<BalanceSummary[]> {
+export async function getBalances(
+  employeeId: string,
+  year: number,
+  asOfMonth?: number,
+): Promise<BalanceSummary[]> {
   const [types, balances, pending] = await Promise.all([
     db.leaveType.findMany({ where: { isActive: true }, orderBy: { name: "asc" } }),
     db.leaveBalance.findMany({ where: { employeeId, year } }),
@@ -75,7 +79,8 @@ export async function getBalances(employeeId: string, year: number, asOfMonth?: 
       _sum: { days: true },
     }),
   ]);
-  const month = asOfMonth ?? (new Date().getUTCFullYear() === year ? new Date().getUTCMonth() + 1 : 12);
+  const month =
+    asOfMonth ?? (new Date().getUTCFullYear() === year ? new Date().getUTCMonth() + 1 : 12);
 
   return types
     .filter((t) => Number(t.annualAllowance) > 0 || balances.some((b) => b.leaveTypeId === t.id))
@@ -101,7 +106,13 @@ export async function getBalances(employeeId: string, year: number, asOfMonth?: 
     });
 }
 
-async function adjustUsed(tx: Prisma.TransactionClient, employeeId: string, leaveTypeId: string, year: number, delta: number) {
+async function adjustUsed(
+  tx: Prisma.TransactionClient,
+  employeeId: string,
+  leaveTypeId: string,
+  year: number,
+  delta: number,
+) {
   await tx.leaveBalance.upsert({
     where: { employeeId_leaveTypeId_year: { employeeId, leaveTypeId, year } },
     update: { used: { increment: delta } },
@@ -111,9 +122,13 @@ async function adjustUsed(tx: Prisma.TransactionClient, employeeId: string, leav
 
 // ─── Requests ────────────────────────────────────────────────────────────────
 
-export async function submitLeaveRequest(user: CurrentUser, input: z.output<typeof leaveRequestSchema>) {
+export async function submitLeaveRequest(
+  user: CurrentUser,
+  input: z.output<typeof leaveRequestSchema>,
+) {
   const employee = await requireOwnEmployee(user.employeeId);
-  if (!can(user, "leave:request", { employeeId: employee.id })) throw new AuthorizationError("leave:request");
+  if (!can(user, "leave:request", { employeeId: employee.id }))
+    throw new AuthorizationError("leave:request");
 
   const type = await db.leaveType.findFirst({ where: { id: input.leaveTypeId, isActive: true } });
   if (!type) throw new DomainError("Choose an active leave type.", "leaveTypeId");
@@ -123,10 +138,16 @@ export async function submitLeaveRequest(user: CurrentUser, input: z.output<type
 
   const holidays = await holidaySet(input.startDate, input.endDate, employee.locationId);
   const days = countLeaveDays(
-    { start: input.startDate, end: input.endDate, startHalfDay: input.startHalfDay, endHalfDay: input.endHalfDay },
+    {
+      start: input.startDate,
+      end: input.endDate,
+      startHalfDay: input.startHalfDay,
+      endHalfDay: input.endHalfDay,
+    },
     holidays,
   );
-  if (days <= 0) throw new DomainError("The selected dates are all weekends or holidays.", "startDate");
+  if (days <= 0)
+    throw new DomainError("The selected dates are all weekends or holidays.", "startDate");
 
   const overlapping = await db.leaveRequest.findFirst({
     where: {
@@ -146,7 +167,9 @@ export async function submitLeaveRequest(user: CurrentUser, input: z.output<type
   const year = Number(input.startDate.slice(0, 4));
   if (Number(type.annualAllowance) > 0) {
     const month = Number(input.endDate.slice(5, 7));
-    const balance = (await getBalances(employee.id, year, month)).find((b) => b.leaveTypeId === type.id);
+    const balance = (await getBalances(employee.id, year, month)).find(
+      (b) => b.leaveTypeId === type.id,
+    );
     const available = balance?.available ?? 0;
     if (days > available) {
       throw new DomainError(
@@ -156,7 +179,10 @@ export async function submitLeaveRequest(user: CurrentUser, input: z.output<type
     }
   }
 
-  const status = initialLeaveStatus({ requiresApproval: type.requiresApproval, hasManager: Boolean(employee.managerId) });
+  const status = initialLeaveStatus({
+    requiresApproval: type.requiresApproval,
+    hasManager: Boolean(employee.managerId),
+  });
   const request = await db.$transaction(async (tx) => {
     const created = await tx.leaveRequest.create({
       data: {
@@ -169,7 +195,9 @@ export async function submitLeaveRequest(user: CurrentUser, input: z.output<type
         days,
         reason: input.reason,
         status,
-        ...(status === "APPROVED" ? { decidedAt: new Date(), decisionComment: "Approval not required" } : {}),
+        ...(status === "APPROVED"
+          ? { decidedAt: new Date(), decisionComment: "Approval not required" }
+          : {}),
       },
     });
     if (status === "APPROVED") await adjustUsed(tx, employee.id, type.id, year, days);
@@ -204,20 +232,30 @@ export async function submitLeaveRequest(user: CurrentUser, input: z.output<type
   return { request, days, status };
 }
 
-export async function decideLeaveRequest(user: CurrentUser, input: z.output<typeof decisionSchema>) {
+export async function decideLeaveRequest(
+  user: CurrentUser,
+  input: z.output<typeof decisionSchema>,
+) {
   const request = await db.leaveRequest.findUnique({
     where: { id: input.id },
-    include: { leaveType: true, employee: { select: { id: true, firstName: true, lastName: true } } },
+    include: {
+      leaveType: true,
+      employee: { select: { id: true, firstName: true, lastName: true } },
+    },
   });
   if (!request) throw new NotFoundError("Leave request");
-  if (!can(user, "leave:approve", { employeeId: request.employeeId })) throw new AuthorizationError("leave:approve");
-  if (request.employeeId === user.employeeId) throw new DomainError("You can't approve your own leave.");
+  if (!can(user, "leave:approve", { employeeId: request.employeeId }))
+    throw new AuthorizationError("leave:approve");
+  if (request.employeeId === user.employeeId)
+    throw new DomainError("You can't approve your own leave.");
 
   const approverLevel = user.permissions["leave:approve"] === "ALL" ? "hr" : "manager";
   const next = nextLeaveStatus(request.status, input.decision, approverLevel);
   if (!next) {
     throw new DomainError(
-      request.status === "MANAGER_APPROVED" ? "This request is waiting for HR approval." : "This request has already been decided.",
+      request.status === "MANAGER_APPROVED"
+        ? "This request is waiting for HR approval."
+        : "This request has already been decided.",
     );
   }
 
@@ -233,9 +271,18 @@ export async function decideLeaveRequest(user: CurrentUser, input: z.output<type
       where: { id: request.id, status: request.status },
       data: { status: next, ...stage },
     });
-    if (count === 0) throw new DomainError("This request was just updated by someone else. Refresh and try again.");
+    if (count === 0)
+      throw new DomainError(
+        "This request was just updated by someone else. Refresh and try again.",
+      );
     if (next === "APPROVED") {
-      await adjustUsed(tx, request.employeeId, request.leaveTypeId, request.startDate.getUTCFullYear(), Number(request.days));
+      await adjustUsed(
+        tx,
+        request.employeeId,
+        request.leaveTypeId,
+        request.startDate.getUTCFullYear(),
+        Number(request.days),
+      );
     }
   });
 
@@ -248,7 +295,12 @@ export async function decideLeaveRequest(user: CurrentUser, input: z.output<type
   });
 
   const summary = `${request.leaveType.name}, ${formatDate(request.startDate)} – ${formatDate(request.endDate)}`;
-  const outcome = next === "REJECTED" ? "rejected" : next === "APPROVED" ? "approved" : "approved by your manager";
+  const outcome =
+    next === "REJECTED"
+      ? "rejected"
+      : next === "APPROVED"
+        ? "approved"
+        : "approved by your manager";
   await notifyEmployees([request.employeeId], {
     type: `leave.${next.toLowerCase()}`,
     title: `Your leave was ${outcome}`,
@@ -272,12 +324,16 @@ export async function cancelLeaveRequest(user: CurrentUser, id: string) {
     include: { employee: { include: { location: { select: { timezone: true } } } } },
   });
   if (!request) throw new NotFoundError("Leave request");
-  const own = request.employeeId === user.employeeId && can(user, "leave:request", { employeeId: request.employeeId });
+  const own =
+    request.employeeId === user.employeeId &&
+    can(user, "leave:request", { employeeId: request.employeeId });
   if (!own && !can(user, "leave:manage")) throw new AuthorizationError("leave:request");
 
   const today = todayIn(request.employee.location?.timezone ?? "UTC");
   if (!isCancellable(request.status, toDateKey(request.startDate), today)) {
-    throw new DomainError("Only open requests or approved leave that hasn't started can be cancelled.");
+    throw new DomainError(
+      "Only open requests or approved leave that hasn't started can be cancelled.",
+    );
   }
 
   await db.$transaction(async (tx) => {
@@ -287,10 +343,22 @@ export async function cancelLeaveRequest(user: CurrentUser, id: string) {
     });
     if (count === 0) throw new DomainError("This request was just updated. Refresh and try again.");
     if (request.status === "APPROVED") {
-      await adjustUsed(tx, request.employeeId, request.leaveTypeId, request.startDate.getUTCFullYear(), -Number(request.days));
+      await adjustUsed(
+        tx,
+        request.employeeId,
+        request.leaveTypeId,
+        request.startDate.getUTCFullYear(),
+        -Number(request.days),
+      );
     }
   });
-  await recordAudit({ actorId: user.id, action: "UPDATE", entity: "LeaveRequest", entityId: id, changes: { from: request.status, to: "CANCELLED" } });
+  await recordAudit({
+    actorId: user.id,
+    action: "UPDATE",
+    entity: "LeaveRequest",
+    entityId: id,
+    changes: { from: request.status, to: "CANCELLED" },
+  });
 }
 
 /** Open requests the user can act on right now. */
@@ -319,25 +387,50 @@ export async function pendingLeaveApprovals(user: CurrentUser) {
 export async function saveLeaveType(user: CurrentUser, input: z.output<typeof leaveTypeSchema>) {
   assertManage(user);
   const { id, ...data } = input;
-  const type = id ? await db.leaveType.update({ where: { id }, data }) : await db.leaveType.create({ data });
-  await recordAudit({ actorId: user.id, action: id ? "UPDATE" : "CREATE", entity: "LeaveType", entityId: type.id, changes: { after: data } });
+  const type = id
+    ? await db.leaveType.update({ where: { id }, data })
+    : await db.leaveType.create({ data });
+  await recordAudit({
+    actorId: user.id,
+    action: id ? "UPDATE" : "CREATE",
+    entity: "LeaveType",
+    entityId: type.id,
+    changes: { after: data },
+  });
 }
 
 export async function saveHoliday(user: CurrentUser, input: z.output<typeof holidaySchema>) {
   assertManage(user);
   const { id, date, ...rest } = input;
   const data = { ...rest, date: fromDateKey(date) };
-  const holiday = id ? await db.holiday.update({ where: { id }, data }) : await db.holiday.create({ data });
-  await recordAudit({ actorId: user.id, action: id ? "UPDATE" : "CREATE", entity: "Holiday", entityId: holiday.id, changes: { name: input.name, date } });
+  const holiday = id
+    ? await db.holiday.update({ where: { id }, data })
+    : await db.holiday.create({ data });
+  await recordAudit({
+    actorId: user.id,
+    action: id ? "UPDATE" : "CREATE",
+    entity: "Holiday",
+    entityId: holiday.id,
+    changes: { name: input.name, date },
+  });
 }
 
 export async function deleteHoliday(user: CurrentUser, id: string) {
   assertManage(user);
   const holiday = await db.holiday.delete({ where: { id } });
-  await recordAudit({ actorId: user.id, action: "DELETE", entity: "Holiday", entityId: id, changes: { name: holiday.name } });
+  await recordAudit({
+    actorId: user.id,
+    action: "DELETE",
+    entity: "Holiday",
+    entityId: id,
+    changes: { name: holiday.name },
+  });
 }
 
-export async function adjustBalance(user: CurrentUser, input: z.output<typeof balanceAdjustmentSchema>) {
+export async function adjustBalance(
+  user: CurrentUser,
+  input: z.output<typeof balanceAdjustmentSchema>,
+) {
   assertManage(user);
   const { employeeId, leaveTypeId, year, allocated, carriedOver, note } = input;
   const before = await db.leaveBalance.findUnique({
@@ -356,7 +449,9 @@ export async function adjustBalance(user: CurrentUser, input: z.output<typeof ba
     changes: {
       leaveTypeId,
       year,
-      before: before ? { allocated: Number(before.allocated), carriedOver: Number(before.carriedOver) } : null,
+      before: before
+        ? { allocated: Number(before.allocated), carriedOver: Number(before.carriedOver) }
+        : null,
       after: { allocated, carriedOver },
       note,
     },
@@ -368,11 +463,17 @@ export async function adjustBalance(user: CurrentUser, input: z.output<typeof ba
  * allowance plus capped carry-over from the previous year. Existing balances
  * are left untouched, so this is safe to run more than once.
  */
-export async function initializeYear(user: CurrentUser, input: z.output<typeof initializeYearSchema>) {
+export async function initializeYear(
+  user: CurrentUser,
+  input: z.output<typeof initializeYearSchema>,
+) {
   assertManage(user);
   const [types, employees, previous] = await Promise.all([
     db.leaveType.findMany({ where: { isActive: true, annualAllowance: { gt: 0 } } }),
-    db.employee.findMany({ where: { deletedAt: null, employmentStatus: { not: "TERMINATED" } }, select: { id: true } }),
+    db.employee.findMany({
+      where: { deletedAt: null, employmentStatus: { not: "TERMINATED" } },
+      select: { id: true },
+    }),
     db.leaveBalance.findMany({ where: { year: input.year - 1 } }),
   ]);
   const prev = new Map(previous.map((b) => [`${b.employeeId}:${b.leaveTypeId}`, b]));
@@ -387,7 +488,11 @@ export async function initializeYear(user: CurrentUser, input: z.output<typeof i
         allocated: t.annualAllowance,
         carriedOver: last
           ? carryOver(
-              { allocated: Number(last.allocated), carriedOver: Number(last.carriedOver), used: Number(last.used) },
+              {
+                allocated: Number(last.allocated),
+                carriedOver: Number(last.carriedOver),
+                used: Number(last.used),
+              },
               Number(t.maxCarryOver),
             )
           : 0,
@@ -395,6 +500,11 @@ export async function initializeYear(user: CurrentUser, input: z.output<typeof i
     }),
   );
   const { count } = await db.leaveBalance.createMany({ data, skipDuplicates: true });
-  await recordAudit({ actorId: user.id, action: "CREATE", entity: "LeaveBalance", changes: { initializedYear: input.year, created: count } });
+  await recordAudit({
+    actorId: user.id,
+    action: "CREATE",
+    entity: "LeaveBalance",
+    changes: { initializedYear: input.year, created: count },
+  });
   return count;
 }

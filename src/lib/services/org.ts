@@ -39,14 +39,22 @@ async function assertValidHead(headId: string | null, departmentId?: string) {
   if (!head) throw new DomainError("Choose an active employee as head.", "headId");
   const current = head.headOfDepartment;
   if (current && current.id !== departmentId && !current.deletedAt) {
-    throw new DomainError(`${head.firstName} ${head.lastName} already heads ${current.name}.`, "headId");
+    throw new DomainError(
+      `${head.firstName} ${head.lastName} already heads ${current.name}.`,
+      "headId",
+    );
   }
 }
 
-export async function createDepartment(user: CurrentUser, input: z.output<typeof departmentSchema>) {
+export async function createDepartment(
+  user: CurrentUser,
+  input: z.output<typeof departmentSchema>,
+) {
   assertManage(user);
   if (input.parentId) {
-    const parent = await db.department.findFirst({ where: { id: input.parentId, deletedAt: null } });
+    const parent = await db.department.findFirst({
+      where: { id: input.parentId, deletedAt: null },
+    });
     if (!parent) throw new DomainError("Parent department not found.", "parentId");
   }
   await assertValidHead(input.headId);
@@ -78,7 +86,10 @@ export async function updateDepartment(
     }
     const parentOf = new Map(rows.map((r) => [r.id, r.parentId]));
     if (wouldCreateCycle(id, data.parentId, parentOf)) {
-      throw new DomainError("A department can't sit under itself or one of its sub-departments.", "parentId");
+      throw new DomainError(
+        "A department can't sit under itself or one of its sub-departments.",
+        "parentId",
+      );
     }
   }
   await assertValidHead(data.headId, id);
@@ -86,7 +97,13 @@ export async function updateDepartment(
   const updated = await db.department.update({ where: { id }, data });
   const changes = diff(existing, data);
   if (changes) {
-    await recordAudit({ actorId: user.id, action: "UPDATE", entity: "Department", entityId: id, changes });
+    await recordAudit({
+      actorId: user.id,
+      action: "UPDATE",
+      entity: "Department",
+      entityId: id,
+      changes,
+    });
   }
   return updated;
 }
@@ -115,7 +132,8 @@ export async function archiveDepartment(
   if (!department) throw new NotFoundError("Department");
 
   const targetId = input.reassignToId ?? department.parentId;
-  const hasDependents = department._count.employees + department._count.children + department._count.positions > 0;
+  const hasDependents =
+    department._count.employees + department._count.children + department._count.positions > 0;
 
   if (targetId) {
     const rows = await departmentParents();
@@ -133,13 +151,26 @@ export async function archiveDepartment(
   }
 
   await db.$transaction([
-    db.employee.updateMany({ where: { departmentId: department.id }, data: { departmentId: targetId } }),
+    db.employee.updateMany({
+      where: { departmentId: department.id },
+      data: { departmentId: targetId },
+    }),
     db.department.updateMany({ where: { parentId: department.id }, data: { parentId: targetId } }),
-    db.position.updateMany({ where: { departmentId: department.id }, data: { departmentId: targetId } }),
-    db.jobOpening.updateMany({ where: { departmentId: department.id }, data: { departmentId: targetId } }),
+    db.position.updateMany({
+      where: { departmentId: department.id },
+      data: { departmentId: targetId },
+    }),
+    db.jobOpening.updateMany({
+      where: { departmentId: department.id },
+      data: { departmentId: targetId },
+    }),
     db.department.update({
       where: { id: department.id },
-      data: { deletedAt: new Date(), headId: null, code: `${department.code}~${Date.now().toString(36)}` },
+      data: {
+        deletedAt: new Date(),
+        headId: null,
+        code: `${department.code}~${Date.now().toString(36)}`,
+      },
     }),
   ]);
 
@@ -155,18 +186,34 @@ export async function archiveDepartment(
 export async function createPosition(user: CurrentUser, input: z.output<typeof positionSchema>) {
   assertManage(user);
   const position = await db.position.create({ data: input });
-  await recordAudit({ actorId: user.id, action: "CREATE", entity: "Position", entityId: position.id, changes: { after: input } });
+  await recordAudit({
+    actorId: user.id,
+    action: "CREATE",
+    entity: "Position",
+    entityId: position.id,
+    changes: { after: input },
+  });
   return position;
 }
 
-export async function updatePosition(user: CurrentUser, input: z.output<typeof updatePositionSchema>) {
+export async function updatePosition(
+  user: CurrentUser,
+  input: z.output<typeof updatePositionSchema>,
+) {
   assertManage(user);
   const { id, ...data } = input;
   const existing = await db.position.findFirst({ where: { id, deletedAt: null } });
   if (!existing) throw new NotFoundError("Position");
   await db.position.update({ where: { id }, data });
   const changes = diff(existing, data);
-  if (changes) await recordAudit({ actorId: user.id, action: "UPDATE", entity: "Position", entityId: id, changes });
+  if (changes)
+    await recordAudit({
+      actorId: user.id,
+      action: "UPDATE",
+      entity: "Position",
+      entityId: id,
+      changes,
+    });
 }
 
 export async function archivePosition(user: CurrentUser, id: string) {
@@ -185,15 +232,33 @@ export async function archivePosition(user: CurrentUser, id: string) {
     where: { id },
     data: { deletedAt: new Date(), code: `${position.code}~${Date.now().toString(36)}` },
   });
-  await recordAudit({ actorId: user.id, action: "DELETE", entity: "Position", entityId: id, changes: { title: position.title } });
+  await recordAudit({
+    actorId: user.id,
+    action: "DELETE",
+    entity: "Position",
+    entityId: id,
+    changes: { title: position.title },
+  });
 }
 
 /** Options for selects across the app. */
 export async function orgOptions() {
   const [departments, positions, locations, employees] = await Promise.all([
-    db.department.findMany({ where: { deletedAt: null }, orderBy: { name: "asc" }, select: { id: true, name: true, code: true } }),
-    db.position.findMany({ where: { deletedAt: null }, orderBy: { title: "asc" }, select: { id: true, title: true, departmentId: true } }),
-    db.location.findMany({ where: { deletedAt: null }, orderBy: { name: "asc" }, select: { id: true, name: true } }),
+    db.department.findMany({
+      where: { deletedAt: null },
+      orderBy: { name: "asc" },
+      select: { id: true, name: true, code: true },
+    }),
+    db.position.findMany({
+      where: { deletedAt: null },
+      orderBy: { title: "asc" },
+      select: { id: true, title: true, departmentId: true },
+    }),
+    db.location.findMany({
+      where: { deletedAt: null },
+      orderBy: { name: "asc" },
+      select: { id: true, name: true },
+    }),
     db.employee.findMany({
       where: { deletedAt: null, employmentStatus: { not: "TERMINATED" } },
       orderBy: [{ firstName: "asc" }, { lastName: "asc" }],
@@ -204,7 +269,10 @@ export async function orgOptions() {
     departments: departments.map((d) => ({ value: d.id, label: d.name })),
     positions: positions.map((p) => ({ value: p.id, label: p.title })),
     locations: locations.map((l) => ({ value: l.id, label: l.name })),
-    employees: employees.map((e) => ({ value: e.id, label: `${e.firstName} ${e.lastName} (${e.employeeNumber})` })),
+    employees: employees.map((e) => ({
+      value: e.id,
+      label: `${e.firstName} ${e.lastName} (${e.employeeNumber})`,
+    })),
   };
 }
 export type OrgOptions = Awaited<ReturnType<typeof orgOptions>>;

@@ -26,7 +26,9 @@ export default async function InterviewPage({ params }: PageProps<"/interviews/[
     where: { id },
     include: {
       interviewers: { select: { id: true, firstName: true, lastName: true } },
-      feedback: { include: { interviewer: { select: { id: true, firstName: true, lastName: true } } } },
+      feedback: {
+        include: { interviewer: { select: { id: true, firstName: true, lastName: true } } },
+      },
       application: {
         include: {
           candidate: true,
@@ -45,8 +47,11 @@ export default async function InterviewPage({ params }: PageProps<"/interviews/[
   const tz = job.location?.timezone ?? "UTC";
   const mine = interview.feedback.find((f) => f.interviewerId === user.employeeId);
   // Interviewers see only their own feedback, so they aren't influenced by others.
-  const visibleFeedback = isRecruiter ? interview.feedback : interview.feedback.filter((f) => f === mine);
-  const canGiveFeedback = isInterviewer && can(user, "interview:feedback", { employeeId: user.employeeId });
+  const visibleFeedback = isRecruiter
+    ? interview.feedback
+    : interview.feedback.filter((f) => f === mine);
+  const canGiveFeedback =
+    isInterviewer && can(user, "interview:feedback", { employeeId: user.employeeId });
 
   return (
     <div className="grid gap-6">
@@ -92,7 +97,9 @@ export default async function InterviewPage({ params }: PageProps<"/interviews/[
             <Card>
               <CardHeader>
                 <CardTitle>Your feedback</CardTitle>
-                <CardDescription>Only recruiters see every interviewer&apos;s feedback.</CardDescription>
+                <CardDescription>
+                  Only recruiters see every interviewer&apos;s feedback.
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <FeedbackForm
@@ -118,21 +125,42 @@ export default async function InterviewPage({ params }: PageProps<"/interviews/[
                 <CardTitle>All feedback</CardTitle>
               </CardHeader>
               <CardContent className="grid gap-4">
-                {visibleFeedback.length === 0 && <p className="text-muted-foreground text-sm">No feedback yet.</p>}
+                {visibleFeedback.length === 0 && (
+                  <p className="text-muted-foreground text-sm">No feedback yet.</p>
+                )}
                 {visibleFeedback.map((f) => (
                   <div key={f.id} className="grid gap-1 rounded-lg border p-4 text-sm">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="font-medium">{fullName(f.interviewer)}</span>
                       <span className="flex">
                         {Array.from({ length: 5 }, (_, i) => (
-                          <Star key={i} className={i < f.rating ? "size-3.5 fill-amber-400 text-amber-400" : "text-muted-foreground size-3.5"} />
+                          <Star
+                            key={i}
+                            className={
+                              i < f.rating
+                                ? "size-3.5 fill-amber-400 text-amber-400"
+                                : "text-muted-foreground size-3.5"
+                            }
+                          />
                         ))}
                       </span>
                       <Badge variant="outline">{labelize(f.recommendation)}</Badge>
                     </div>
-                    {f.strengths && <p><span className="text-muted-foreground">Strengths:</span> {f.strengths}</p>}
-                    {f.concerns && <p><span className="text-muted-foreground">Concerns:</span> {f.concerns}</p>}
-                    {f.notes && <p><span className="text-muted-foreground">Notes:</span> {f.notes}</p>}
+                    {f.strengths && (
+                      <p>
+                        <span className="text-muted-foreground">Strengths:</span> {f.strengths}
+                      </p>
+                    )}
+                    {f.concerns && (
+                      <p>
+                        <span className="text-muted-foreground">Concerns:</span> {f.concerns}
+                      </p>
+                    )}
+                    {f.notes && (
+                      <p>
+                        <span className="text-muted-foreground">Notes:</span> {f.notes}
+                      </p>
+                    )}
                   </div>
                 ))}
               </CardContent>

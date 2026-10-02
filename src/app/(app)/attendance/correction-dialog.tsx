@@ -26,7 +26,13 @@ export function CorrectionDialog({ defaultDate }: { defaultDate: string }) {
   const [open, setOpen] = useState(false);
   const { form, onSubmit, pending } = useActionForm({
     schema: correctionSchema,
-    defaultValues: { date: defaultDate, clockIn: "09:00", clockOut: "17:30", status: "PRESENT", reason: "" },
+    defaultValues: {
+      date: defaultDate,
+      clockIn: "09:00",
+      clockOut: "17:30",
+      status: "PRESENT",
+      reason: "",
+    },
     action: requestCorrectionAction,
     onSuccess: (_d, f) => {
       setOpen(false);
@@ -45,13 +51,20 @@ export function CorrectionDialog({ defaultDate }: { defaultDate: string }) {
         <DialogHeader>
           <DialogTitle>Request an attendance correction</DialogTitle>
           <DialogDescription>
-            Forgot to clock in or out? Your manager or HR will review the change. Times are in your local time zone.
+            Forgot to clock in or out? Your manager or HR will review the change. Times are in your
+            local time zone.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={onSubmit} className="grid gap-4" noValidate>
             <div className="grid gap-4 sm:grid-cols-2">
-              <TextField control={form.control} name="date" label="Date" type="date" max={defaultDate} />
+              <TextField
+                control={form.control}
+                name="date"
+                label="Date"
+                type="date"
+                max={defaultDate}
+              />
               <SelectField
                 control={form.control}
                 name="status"

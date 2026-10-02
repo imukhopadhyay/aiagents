@@ -8,7 +8,14 @@ import { StatusBadge } from "@/components/shared/status-badge";
 import { DAY_STATUS_STYLES, Legend } from "@/components/time/day-colors";
 import { MonthNav } from "@/components/time/month-nav";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { requireAuth } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { fromDateKey, isMonthKey } from "@/lib/domain/dates";
@@ -81,8 +88,9 @@ export default async function AttendancePage({ searchParams }: PageProps<"/atten
               <CardTitle>This month</CardTitle>
               {mine && (
                 <CardDescription>
-                  {mine.summary.present} days worked · {mine.summary.late} late · {mine.summary.absent} absent ·{" "}
-                  {mine.summary.onLeave} on leave · {mine.summary.hours} h
+                  {mine.summary.present} days worked · {mine.summary.late} late ·{" "}
+                  {mine.summary.absent} absent · {mine.summary.onLeave} on leave ·{" "}
+                  {mine.summary.hours} h
                 </CardDescription>
               )}
             </div>
@@ -109,11 +117,15 @@ export default async function AttendancePage({ searchParams }: PageProps<"/atten
                   )}
                 >
                   <span className="font-medium">{Number(day.date.slice(8))}</span>
-                  {day.hours !== null && <span className="text-[10px] opacity-80">{day.hours}h</span>}
+                  {day.hours !== null && (
+                    <span className="text-[10px] opacity-80">{day.hours}h</span>
+                  )}
                 </div>
               ))}
             </div>
-            <Legend statuses={["PRESENT", "REMOTE", "LATE", "ABSENT", "ON_LEAVE", "HOLIDAY", "WEEKEND"]} />
+            <Legend
+              statuses={["PRESENT", "REMOTE", "LATE", "ABSENT", "ON_LEAVE", "HOLIDAY", "WEEKEND"]}
+            />
           </CardContent>
         </Card>
       </div>
@@ -143,15 +155,28 @@ export default async function AttendancePage({ searchParams }: PageProps<"/atten
                     <TableCell>
                       <StatusBadge status={c.requestedStatus} />{" "}
                       <span className="text-muted-foreground text-xs">
-                        {c.requestedClockIn ? new Intl.DateTimeFormat("en", { timeStyle: "short", timeZone: today.timezone }).format(c.requestedClockIn) : ""}
-                        {c.requestedClockOut ? ` – ${new Intl.DateTimeFormat("en", { timeStyle: "short", timeZone: today.timezone }).format(c.requestedClockOut)}` : ""}
+                        {c.requestedClockIn
+                          ? new Intl.DateTimeFormat("en", {
+                              timeStyle: "short",
+                              timeZone: today.timezone,
+                            }).format(c.requestedClockIn)
+                          : ""}
+                        {c.requestedClockOut
+                          ? ` – ${new Intl.DateTimeFormat("en", { timeStyle: "short", timeZone: today.timezone }).format(c.requestedClockOut)}`
+                          : ""}
                       </span>
                     </TableCell>
-                    <TableCell className="max-w-64 truncate whitespace-normal">{c.reason}</TableCell>
-                    <TableCell className="text-muted-foreground">{formatDateTime(c.createdAt)}</TableCell>
+                    <TableCell className="max-w-64 truncate whitespace-normal">
+                      {c.reason}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {formatDateTime(c.createdAt)}
+                    </TableCell>
                     <TableCell className="pr-6">
                       <StatusBadge status={c.status} />
-                      {c.reviewComment && <p className="text-muted-foreground mt-1 text-xs">“{c.reviewComment}”</p>}
+                      {c.reviewComment && (
+                        <p className="text-muted-foreground mt-1 text-xs">“{c.reviewComment}”</p>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}

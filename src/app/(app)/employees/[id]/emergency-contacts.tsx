@@ -64,7 +64,12 @@ function ContactDialog({
           <form onSubmit={onSubmit} className="grid gap-4" noValidate>
             <div className="grid gap-4 sm:grid-cols-2">
               <TextField control={form.control} name="name" label="Name" />
-              <TextField control={form.control} name="relationship" label="Relationship" placeholder="e.g. Partner" />
+              <TextField
+                control={form.control}
+                name="relationship"
+                label="Relationship"
+                placeholder="e.g. Partner"
+              />
               <TextField control={form.control} name="phone" label="Phone" type="tel" />
               <TextField control={form.control} name="email" label="Email" type="email" />
             </div>
@@ -106,7 +111,11 @@ export function EmergencyContacts({
         </div>
       )}
       {contacts.length === 0 ? (
-        <EmptyState icon={Phone} title="No emergency contacts" description="Add someone we can reach in an emergency." />
+        <EmptyState
+          icon={Phone}
+          title="No emergency contacts"
+          description="Add someone we can reach in an emergency."
+        />
       ) : (
         <ul className="grid gap-3 sm:grid-cols-2">
           {contacts.map((c) => (

@@ -11,7 +11,14 @@ import { DAY_STATUS_STYLES } from "@/components/time/day-colors";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { requireAuth } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { addDays, isDateKey, todayIn } from "@/lib/domain/dates";
@@ -35,13 +42,18 @@ export default async function TeamAttendancePage({ searchParams }: PageProps<"/a
 
   const [rows, departments] = await Promise.all([
     dailyAttendance(user, date, department),
-    db.department.findMany({ where: { deletedAt: null }, orderBy: { name: "asc" }, select: { id: true, name: true } }),
+    db.department.findMany({
+      where: { deletedAt: null },
+      orderBy: { name: "asc" },
+      select: { id: true, name: true },
+    }),
   ]);
   const counts = rows.reduce<Record<string, number>>((acc, r) => {
     acc[r.day.status] = (acc[r.day.status] ?? 0) + 1;
     return acc;
   }, {});
-  const time = (d: Date | null, tz: string) => (d ? new Intl.DateTimeFormat("en", { timeStyle: "short", timeZone: tz }).format(d) : "—");
+  const time = (d: Date | null, tz: string) =>
+    d ? new Intl.DateTimeFormat("en", { timeStyle: "short", timeZone: tz }).format(d) : "—";
 
   return (
     <div className="grid gap-6">
@@ -51,7 +63,10 @@ export default async function TeamAttendancePage({ searchParams }: PageProps<"/a
         actions={
           <div className="flex items-center gap-2">
             <Button variant="outline" size="icon" asChild>
-              <Link href={hrefWith("/attendance/team", params, { date: addDays(date, -1) })} aria-label="Previous day">
+              <Link
+                href={hrefWith("/attendance/team", params, { date: addDays(date, -1) })}
+                aria-label="Previous day"
+              >
                 <ChevronLeft />
               </Link>
             </Button>
@@ -69,7 +84,10 @@ export default async function TeamAttendancePage({ searchParams }: PageProps<"/a
               </Button>
             </form>
             <Button variant="outline" size="icon" asChild>
-              <Link href={hrefWith("/attendance/team", params, { date: addDays(date, 1) })} aria-label="Next day">
+              <Link
+                href={hrefWith("/attendance/team", params, { date: addDays(date, 1) })}
+                aria-label="Next day"
+              >
                 <ChevronRight />
               </Link>
             </Button>
@@ -78,9 +96,17 @@ export default async function TeamAttendancePage({ searchParams }: PageProps<"/a
       />
       <AttendanceTabs active="team" showTeam />
       <div className="flex flex-wrap items-center gap-2">
-        <FilterSelect param="department" label="Departments" options={departments.map((d) => ({ value: d.id, label: d.name }))} />
+        <FilterSelect
+          param="department"
+          label="Departments"
+          options={departments.map((d) => ({ value: d.id, label: d.name }))}
+        />
         {Object.entries(counts).map(([status, n]) => (
-          <Badge key={status} variant="outline" className={cn("border-transparent", DAY_STATUS_STYLES[status]?.cell)}>
+          <Badge
+            key={status}
+            variant="outline"
+            className={cn("border-transparent", DAY_STATUS_STYLES[status]?.cell)}
+          >
             {DAY_STATUS_STYLES[status]?.label}: {n}
           </Badge>
         ))}
@@ -114,14 +140,19 @@ export default async function TeamAttendancePage({ searchParams }: PageProps<"/a
                       </TableCell>
                       <TableCell>{employee.department?.name ?? "—"}</TableCell>
                       <TableCell>
-                        <Badge variant="outline" className={cn("border-transparent", DAY_STATUS_STYLES[day.status]?.cell)}>
+                        <Badge
+                          variant="outline"
+                          className={cn("border-transparent", DAY_STATUS_STYLES[day.status]?.cell)}
+                        >
                           {DAY_STATUS_STYLES[day.status]?.label}
                         </Badge>
                         {notes && <p className="text-muted-foreground mt-1 text-xs">{notes}</p>}
                       </TableCell>
                       <TableCell className="tabular-nums">{time(day.clockIn, tz)}</TableCell>
                       <TableCell className="tabular-nums">{time(day.clockOut, tz)}</TableCell>
-                      <TableCell className="pr-6 text-right tabular-nums">{day.hours ?? "—"}</TableCell>
+                      <TableCell className="pr-6 text-right tabular-nums">
+                        {day.hours ?? "—"}
+                      </TableCell>
                     </TableRow>
                   );
                 })}

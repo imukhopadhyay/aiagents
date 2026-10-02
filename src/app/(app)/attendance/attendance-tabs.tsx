@@ -2,7 +2,13 @@ import Link from "next/link";
 
 import { cn } from "@/lib/utils";
 
-export function AttendanceTabs({ active, showTeam }: { active: "me" | "team" | "report"; showTeam: boolean }) {
+export function AttendanceTabs({
+  active,
+  showTeam,
+}: {
+  active: "me" | "team" | "report";
+  showTeam: boolean;
+}) {
   if (!showTeam) return null;
   const tabs = [
     { key: "me", label: "My attendance", href: "/attendance" },
@@ -18,7 +24,9 @@ export function AttendanceTabs({ active, showTeam }: { active: "me" | "team" | "
           aria-current={active === tab.key ? "page" : undefined}
           className={cn(
             "rounded-md px-3 py-1 text-sm font-medium",
-            active === tab.key ? "bg-background text-foreground shadow-sm" : "hover:text-foreground",
+            active === tab.key
+              ? "bg-background text-foreground shadow-sm"
+              : "hover:text-foreground",
           )}
         >
           {tab.label}

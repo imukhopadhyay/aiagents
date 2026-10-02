@@ -11,7 +11,14 @@ import { SortHeader } from "@/components/shared/sort-header";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { requirePermission } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { formatDate, fullName, labelize } from "@/lib/format";
@@ -26,7 +33,10 @@ const PATH = "/employees";
 
 export default async function EmployeesPage({ searchParams }: PageProps<"/employees">) {
   const user = await requirePermission("employee:read");
-  const params = parseListParams(await searchParams, { sortable: EMPLOYEE_SORTS, defaultSort: "name" });
+  const params = parseListParams(await searchParams, {
+    sortable: EMPLOYEE_SORTS,
+    defaultSort: "name",
+  });
   const filters = {
     q: params.q,
     departmentId: params.get("department"),
@@ -35,14 +45,30 @@ export default async function EmployeesPage({ searchParams }: PageProps<"/employ
   };
 
   const [{ rows, total }, departments, locations] = await Promise.all([
-    listEmployees(user, { ...filters, sort: params.sort, dir: params.dir, page: params.page, pageSize: params.pageSize }),
-    db.department.findMany({ where: { deletedAt: null }, orderBy: { name: "asc" }, select: { id: true, name: true } }),
-    db.location.findMany({ where: { deletedAt: null }, orderBy: { name: "asc" }, select: { id: true, name: true } }),
+    listEmployees(user, {
+      ...filters,
+      sort: params.sort,
+      dir: params.dir,
+      page: params.page,
+      pageSize: params.pageSize,
+    }),
+    db.department.findMany({
+      where: { deletedAt: null },
+      orderBy: { name: "asc" },
+      select: { id: true, name: true },
+    }),
+    db.location.findMany({
+      where: { deletedAt: null },
+      orderBy: { name: "asc" },
+      select: { id: true, name: true },
+    }),
   ]);
 
   const canCreate = can(user, "employee:create");
   const sortProps = { pathname: PATH, params: params.raw, sort: params.sort, dir: params.dir };
-  const filtered = Boolean(params.q || filters.departmentId || filters.locationId || filters.status);
+  const filtered = Boolean(
+    params.q || filters.departmentId || filters.locationId || filters.status,
+  );
 
   return (
     <div className="grid gap-6">
@@ -52,7 +78,14 @@ export default async function EmployeesPage({ searchParams }: PageProps<"/employ
         actions={
           <>
             <Button variant="outline" asChild>
-              <a href={hrefWith("/api/employees/export", params.raw, { page: null, sort: null, dir: null })} download>
+              <a
+                href={hrefWith("/api/employees/export", params.raw, {
+                  page: null,
+                  sort: null,
+                  dir: null,
+                })}
+                download
+              >
                 <Download /> Export CSV
               </a>
             </Button>
@@ -76,8 +109,16 @@ export default async function EmployeesPage({ searchParams }: PageProps<"/employ
 
       <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
         <SearchInput placeholder="Search name, email or number" />
-        <FilterSelect param="department" label="Departments" options={departments.map((d) => ({ value: d.id, label: d.name }))} />
-        <FilterSelect param="location" label="Locations" options={locations.map((l) => ({ value: l.id, label: l.name }))} />
+        <FilterSelect
+          param="department"
+          label="Departments"
+          options={departments.map((d) => ({ value: d.id, label: d.name }))}
+        />
+        <FilterSelect
+          param="location"
+          label="Locations"
+          options={locations.map((l) => ({ value: l.id, label: l.name }))}
+        />
         <FilterSelect
           param="status"
           label="Statuses"
@@ -143,7 +184,13 @@ export default async function EmployeesPage({ searchParams }: PageProps<"/employ
           </CardContent>
         </Card>
       )}
-      <Pagination pathname={PATH} params={params.raw} page={params.page} pageSize={params.pageSize} total={total} />
+      <Pagination
+        pathname={PATH}
+        params={params.raw}
+        page={params.page}
+        pageSize={params.pageSize}
+        total={total}
+      />
     </div>
   );
 }

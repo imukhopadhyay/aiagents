@@ -10,7 +10,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { labelize } from "@/lib/format";
 import { DOCUMENT_CATEGORIES } from "@/lib/validation/employee";
 
@@ -63,10 +69,18 @@ function UploadForm({ employeeId }: { employeeId: string }) {
   }
 
   return (
-    <form onSubmit={submit} className="grid gap-3 rounded-lg border p-4 sm:grid-cols-[1fr_10rem_1fr_auto] sm:items-end">
+    <form
+      onSubmit={submit}
+      className="grid gap-3 rounded-lg border p-4 sm:grid-cols-[1fr_10rem_1fr_auto] sm:items-end"
+    >
       <div className="grid gap-2">
         <Label htmlFor="doc-file">File</Label>
-        <Input id="doc-file" ref={fileRef} type="file" accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png" />
+        <Input
+          id="doc-file"
+          ref={fileRef}
+          type="file"
+          accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png"
+        />
       </div>
       <div className="grid gap-2">
         <Label htmlFor="doc-category">Category</Label>
@@ -85,12 +99,19 @@ function UploadForm({ employeeId }: { employeeId: string }) {
       </div>
       <div className="grid gap-2">
         <Label htmlFor="doc-name">Display name (optional)</Label>
-        <Input id="doc-name" value={name} onChange={(e) => setName(e.target.value)} maxLength={200} />
+        <Input
+          id="doc-name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          maxLength={200}
+        />
       </div>
       <Button type="submit" disabled={pending}>
         {pending ? <Loader2 className="animate-spin" /> : <Upload />} Upload
       </Button>
-      <p className="text-muted-foreground text-xs sm:col-span-4">PDF, Word, text or images, up to 10 MB.</p>
+      <p className="text-muted-foreground text-xs sm:col-span-4">
+        PDF, Word, text or images, up to 10 MB.
+      </p>
     </form>
   );
 }

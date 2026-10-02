@@ -52,8 +52,18 @@ describe("dates", () => {
   });
 
   it("detects overlapping ranges", () => {
-    expect(rangesOverlap({ start: "2026-01-01", end: "2026-01-05" }, { start: "2026-01-05", end: "2026-01-09" })).toBe(true);
-    expect(rangesOverlap({ start: "2026-01-01", end: "2026-01-04" }, { start: "2026-01-05", end: "2026-01-09" })).toBe(false);
+    expect(
+      rangesOverlap(
+        { start: "2026-01-01", end: "2026-01-05" },
+        { start: "2026-01-05", end: "2026-01-09" },
+      ),
+    ).toBe(true);
+    expect(
+      rangesOverlap(
+        { start: "2026-01-01", end: "2026-01-04" },
+        { start: "2026-01-05", end: "2026-01-09" },
+      ),
+    ).toBe(false);
   });
 
   it("finds today in a time zone", () => {
@@ -84,7 +94,9 @@ describe("countLeaveDays", () => {
         NO_HOLIDAYS,
       ),
     ).toBe(2);
-    expect(countLeaveDays({ start: "2026-10-05", end: "2026-10-05", endHalfDay: true }, NO_HOLIDAYS)).toBe(0.5);
+    expect(
+      countLeaveDays({ start: "2026-10-05", end: "2026-10-05", endHalfDay: true }, NO_HOLIDAYS),
+    ).toBe(0.5);
   });
 
   it("ignores half-day flags on non-working days", () => {
@@ -108,7 +120,9 @@ describe("leave workflow", () => {
   it("starts requests in the right state", () => {
     expect(initialLeaveStatus({ requiresApproval: false, hasManager: true })).toBe("APPROVED");
     expect(initialLeaveStatus({ requiresApproval: true, hasManager: true })).toBe("PENDING");
-    expect(initialLeaveStatus({ requiresApproval: true, hasManager: false })).toBe("MANAGER_APPROVED");
+    expect(initialLeaveStatus({ requiresApproval: true, hasManager: false })).toBe(
+      "MANAGER_APPROVED",
+    );
   });
 
   it("moves through manager then HR approval", () => {
@@ -195,7 +209,10 @@ describe("csv", () => {
   });
 
   it("round-trips", () => {
-    const rows = [["x", "y, z"], ['"quoted"', "line\nbreak"]];
+    const rows = [
+      ["x", "y, z"],
+      ['"quoted"', "line\nbreak"],
+    ];
     expect(parseCsv(toCsv(rows))).toEqual(rows);
   });
 });
@@ -210,7 +227,9 @@ describe("attendance", () => {
   });
 
   it("computes worked hours", () => {
-    expect(workedHours(new Date("2026-10-02T09:00:00Z"), new Date("2026-10-02T17:30:00Z"))).toBe(8.5);
+    expect(workedHours(new Date("2026-10-02T09:00:00Z"), new Date("2026-10-02T17:30:00Z"))).toBe(
+      8.5,
+    );
     expect(workedHours(new Date("2026-10-02T09:00:00Z"), null)).toBeNull();
   });
 

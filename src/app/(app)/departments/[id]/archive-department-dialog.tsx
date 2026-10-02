@@ -17,7 +17,13 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 import { archiveDepartmentAction } from "../actions";
 
@@ -42,7 +48,10 @@ export function ArchiveDepartmentDialog({
 
   function submit() {
     startTransition(async () => {
-      const result = await archiveDepartmentAction({ id: departmentId, reassignToId: targetId || null });
+      const result = await archiveDepartmentAction({
+        id: departmentId,
+        reassignToId: targetId || null,
+      });
       if (!result.ok) {
         toast.error(result.error);
         return;
@@ -90,7 +99,11 @@ export function ArchiveDepartmentDialog({
           <Button variant="outline" onClick={() => setOpen(false)} disabled={pending}>
             Cancel
           </Button>
-          <Button variant="destructive" onClick={submit} disabled={pending || (hasDependents && !targetId)}>
+          <Button
+            variant="destructive"
+            onClick={submit}
+            disabled={pending || (hasDependents && !targetId)}
+          >
             {pending && <Loader2 className="animate-spin" />}
             Archive department
           </Button>

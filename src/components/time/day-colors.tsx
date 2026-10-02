@@ -17,7 +17,9 @@ export function Legend({ statuses }: { statuses: string[] }) {
     <ul className="flex flex-wrap gap-3 text-xs">
       {statuses.map((s) => (
         <li key={s} className="flex items-center gap-1.5">
-          <span className={`inline-block size-3 rounded-sm border ${DAY_STATUS_STYLES[s]?.cell ?? ""}`} />
+          <span
+            className={`inline-block size-3 rounded-sm border ${DAY_STATUS_STYLES[s]?.cell ?? ""}`}
+          />
           {DAY_STATUS_STYLES[s]?.label ?? s}
         </li>
       ))}

@@ -41,7 +41,11 @@ export async function saveJobAction(input: unknown) {
 export async function setJobStatusAction(input: unknown) {
   return runAction(jobStatusSchema, input, async (data, user) => {
     await setJobStatus(user, data);
-    return success(data.status === "OPEN" ? "Job published" : `Job marked ${labelize(data.status).toLowerCase()}`);
+    return success(
+      data.status === "OPEN"
+        ? "Job published"
+        : `Job marked ${labelize(data.status).toLowerCase()}`,
+    );
   });
 }
 

@@ -40,7 +40,12 @@ function describeChange(entry: { action: string; entity: string; changes: unknow
   if (c.photo) return "Photo updated";
   const after = (c.after ?? {}) as Record<string, unknown>;
   const fields = Object.keys(after);
-  return fields.length ? `Updated ${fields.map((f) => labelize(f.replace(/([A-Z])/g, "_$1"))).join(", ").toLowerCase()}` : "Updated";
+  return fields.length
+    ? `Updated ${fields
+        .map((f) => labelize(f.replace(/([A-Z])/g, "_$1")))
+        .join(", ")
+        .toLowerCase()}`
+    : "Updated";
 }
 
 export default async function EmployeePage({ params }: PageProps<"/employees/[id]">) {
@@ -72,14 +77,18 @@ export default async function EmployeePage({ params }: PageProps<"/employees/[id
   const name = fullName(employee);
   const terminated = employee.employmentStatus === "TERMINATED";
   const canEdit = !terminated && can(user, "employee:update", { employeeId: id });
-  const canEditProfile = !terminated && (canEdit || can(user, "profile:update", { employeeId: id }));
+  const canEditProfile =
+    !terminated && (canEdit || can(user, "profile:update", { employeeId: id }));
   const canOffboard = can(user, "employee:delete", { employeeId: id });
   const canSeeHistory = can(user, "audit:read") || canEdit;
   const pendingInvite = employee.user && !employee.user.passwordHash && employee.user.isActive;
 
   const history = canSeeHistory
     ? await db.auditLog.findMany({
-        where: { entityId: id, entity: { in: ["Employee", "EmployeeDocument", "EmergencyContact"] } },
+        where: {
+          entityId: id,
+          entity: { in: ["Employee", "EmployeeDocument", "EmergencyContact"] },
+        },
         orderBy: { createdAt: "desc" },
         take: 50,
         include: { actor: { select: { name: true, email: true } } },
@@ -91,13 +100,19 @@ export default async function EmployeePage({ params }: PageProps<"/employees/[id
     <div className="grid gap-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-4">
-          <PhotoUploader employeeId={id} name={name} photoUrl={employee.photoUrl} editable={canEditProfile} />
+          <PhotoUploader
+            employeeId={id}
+            name={name}
+            photoUrl={employee.photoUrl}
+            editable={canEditProfile}
+          />
           <div className="min-w-0">
             <h1 className="flex flex-wrap items-center gap-2 text-2xl font-semibold tracking-tight">
               {name} <StatusBadge status={employee.employmentStatus} />
             </h1>
             <p className="text-muted-foreground">
-              {[employee.position?.title, employee.department?.name].filter(Boolean).join(" · ") || "No position"}
+              {[employee.position?.title, employee.department?.name].filter(Boolean).join(" · ") ||
+                "No position"}
             </p>
           </div>
         </div>
@@ -124,7 +139,12 @@ export default async function EmployeePage({ params }: PageProps<"/employees/[id
           ) : (
             canEditProfile && (
               <ProfileDialog
-                profile={{ id, phone: employee.phone, personalEmail: employee.personalEmail, address: employee.address }}
+                profile={{
+                  id,
+                  phone: employee.phone,
+                  personalEmail: employee.personalEmail,
+                  address: employee.address,
+                }}
               />
             )
           )}
@@ -177,7 +197,10 @@ export default async function EmployeePage({ params }: PageProps<"/employees/[id
                   {
                     label: "Department",
                     value: employee.department ? (
-                      <Link className="underline-offset-4 hover:underline" href={`/departments/${employee.department.id}`}>
+                      <Link
+                        className="underline-offset-4 hover:underline"
+                        href={`/departments/${employee.department.id}`}
+                      >
                         {employee.department.name}
                       </Link>
                     ) : null,
@@ -187,7 +210,10 @@ export default async function EmployeePage({ params }: PageProps<"/employees/[id
                     label: "Manager",
                     value: employee.manager ? (
                       can(user, "employee:read", { employeeId: employee.manager.id }) ? (
-                        <Link className="underline-offset-4 hover:underline" href={`/employees/${employee.manager.id}`}>
+                        <Link
+                          className="underline-offset-4 hover:underline"
+                          href={`/employees/${employee.manager.id}`}
+                        >
                           {fullName(employee.manager)}
                         </Link>
                       ) : (
@@ -250,7 +276,11 @@ export default async function EmployeePage({ params }: PageProps<"/employees/[id
         </TabsContent>
 
         <TabsContent value="contacts">
-          <EmergencyContacts employeeId={id} contacts={employee.emergencyContacts} editable={canEditProfile} />
+          <EmergencyContacts
+            employeeId={id}
+            contacts={employee.emergencyContacts}
+            editable={canEditProfile}
+          />
         </TabsContent>
 
         <TabsContent value="documents">
@@ -281,7 +311,8 @@ export default async function EmployeePage({ params }: PageProps<"/employees/[id
                       <li key={entry.id} className="grid gap-0.5 px-6 py-3 text-sm">
                         <span className="font-medium">{describeChange(entry)}</span>
                         <span className="text-muted-foreground text-xs">
-                          {formatDateTime(entry.createdAt)} · {entry.actor?.name ?? entry.actor?.email ?? "System"}
+                          {formatDateTime(entry.createdAt)} ·{" "}
+                          {entry.actor?.name ?? entry.actor?.email ?? "System"}
                         </span>
                       </li>
                     ))}

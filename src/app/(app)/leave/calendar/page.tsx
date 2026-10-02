@@ -9,7 +9,15 @@ import { MonthNav } from "@/components/time/month-nav";
 import { Card, CardContent } from "@/components/ui/card";
 import { requireAuth } from "@/lib/auth/session";
 import { db } from "@/lib/db";
-import { eachDay, fromDateKey, isMonthKey, isWeekend, monthRange, todayIn, toDateKey } from "@/lib/domain/dates";
+import {
+  eachDay,
+  fromDateKey,
+  isMonthKey,
+  isWeekend,
+  monthRange,
+  todayIn,
+  toDateKey,
+} from "@/lib/domain/dates";
 import { formatDate, formatMonth, fullName } from "@/lib/format";
 import { first } from "@/lib/list-params";
 import { employeeAccessWhere } from "@/lib/services/employees";
@@ -53,7 +61,11 @@ export default async function LeaveCalendarPage({ searchParams }: PageProps<"/le
       where: { date: { gte: fromDateKey(start), lte: fromDateKey(end) } },
       select: { date: true, name: true, locationId: true },
     }),
-    db.department.findMany({ where: { deletedAt: null }, orderBy: { name: "asc" }, select: { id: true, name: true } }),
+    db.department.findMany({
+      where: { deletedAt: null },
+      orderBy: { name: "asc" },
+      select: { id: true, name: true },
+    }),
   ]);
 
   const days = eachDay(start, end);
@@ -66,23 +78,44 @@ export default async function LeaveCalendarPage({ searchParams }: PageProps<"/le
     }
   }
   const holidayFor = (locationId: string | null, day: string) =>
-    holidays.find((h) => toDateKey(h.date) === day && (h.locationId === null || h.locationId === locationId));
-  const onLeaveToday = employees.filter((e) => cell.get(`${e.id}:${today}`)?.status === "APPROVED").length;
+    holidays.find(
+      (h) => toDateKey(h.date) === day && (h.locationId === null || h.locationId === locationId),
+    );
+  const onLeaveToday = employees.filter(
+    (e) => cell.get(`${e.id}:${today}`)?.status === "APPROVED",
+  ).length;
 
   return (
     <div className="grid gap-6">
       <PageHeader
         title="Leave"
         description={`Who's off in ${formatMonth(month)}${month === today.slice(0, 7) ? ` · ${onLeaveToday} on leave today` : ""}.`}
-        actions={<MonthNav pathname="/leave/calendar" params={department ? { department, month } : { month }} month={month} />}
+        actions={
+          <MonthNav
+            pathname="/leave/calendar"
+            params={department ? { department, month } : { month }}
+            month={month}
+          />
+        }
       />
       <LeaveTabs active="calendar" showTeam />
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <FilterSelect param="department" label="Departments" options={departments.map((d) => ({ value: d.id, label: d.name }))} />
+        <FilterSelect
+          param="department"
+          label="Departments"
+          options={departments.map((d) => ({ value: d.id, label: d.name }))}
+        />
         <ul className="flex flex-wrap gap-3 text-xs">
-          <li className="flex items-center gap-1.5"><span className="inline-block size-3 rounded-sm bg-violet-500/70" /> Approved</li>
-          <li className="flex items-center gap-1.5"><span className="inline-block size-3 rounded-sm border border-dashed border-violet-500 bg-violet-500/15" /> Pending</li>
-          <li className="flex items-center gap-1.5"><span className="bg-muted-foreground/30 inline-block size-3 rounded-sm" /> Holiday</li>
+          <li className="flex items-center gap-1.5">
+            <span className="inline-block size-3 rounded-sm bg-violet-500/70" /> Approved
+          </li>
+          <li className="flex items-center gap-1.5">
+            <span className="inline-block size-3 rounded-sm border border-dashed border-violet-500 bg-violet-500/15" />{" "}
+            Pending
+          </li>
+          <li className="flex items-center gap-1.5">
+            <span className="bg-muted-foreground/30 inline-block size-3 rounded-sm" /> Holiday
+          </li>
         </ul>
       </div>
       {employees.length === 0 ? (
@@ -93,7 +126,9 @@ export default async function LeaveCalendarPage({ searchParams }: PageProps<"/le
             <table className="w-full border-collapse text-xs">
               <thead>
                 <tr className="border-b">
-                  <th className="bg-card sticky left-0 z-10 min-w-44 px-4 py-2 text-left text-sm font-medium">Employee</th>
+                  <th className="bg-card sticky left-0 z-10 min-w-44 px-4 py-2 text-left text-sm font-medium">
+                    Employee
+                  </th>
                   {days.map((d) => (
                     <th
                       key={d}
@@ -111,7 +146,9 @@ export default async function LeaveCalendarPage({ searchParams }: PageProps<"/le
               <tbody>
                 {employees.map((e) => (
                   <tr key={e.id} className="border-b last:border-0">
-                    <td className="bg-card sticky left-0 z-10 px-4 py-2 text-sm font-medium whitespace-nowrap">{fullName(e)}</td>
+                    <td className="bg-card sticky left-0 z-10 px-4 py-2 text-sm font-medium whitespace-nowrap">
+                      {fullName(e)}
+                    </td>
                     {days.map((d) => {
                       const leave = cell.get(`${e.id}:${d}`);
                       const holiday = holidayFor(e.locationId, d);
@@ -130,7 +167,9 @@ export default async function LeaveCalendarPage({ searchParams }: PageProps<"/le
                               "h-6 rounded-sm",
                               weekend && "bg-muted/60",
                               holiday && "bg-muted-foreground/30",
-                              leave && !weekend && !holiday &&
+                              leave &&
+                                !weekend &&
+                                !holiday &&
                                 (leave.status === "APPROVED"
                                   ? "bg-violet-500/70"
                                   : "border border-dashed border-violet-500 bg-violet-500/15"),

@@ -37,10 +37,9 @@ import {
 export async function createEmployeeAction(input: unknown) {
   return runAction(createEmployeeSchema, input, async (data, user) => {
     const employee = await createEmployee(user, data);
-    return success(
-      employee.userId ? "Employee created and invitation sent" : "Employee created",
-      { id: employee.id },
-    );
+    return success(employee.userId ? "Employee created and invitation sent" : "Employee created", {
+      id: employee.id,
+    });
   });
 }
 
@@ -122,10 +121,15 @@ export async function archiveEmployeeAction(input: unknown) {
 
 export async function resendInviteAction(input: unknown) {
   return runAction(idSchema, input, async ({ id }, user) => {
-    if (!can(user, "employee:update", { employeeId: id })) throw new AuthorizationError("employee:update");
-    const employee = await db.employee.findFirst({ where: { id, deletedAt: null }, include: { user: true } });
+    if (!can(user, "employee:update", { employeeId: id }))
+      throw new AuthorizationError("employee:update");
+    const employee = await db.employee.findFirst({
+      where: { id, deletedAt: null },
+      include: { user: true },
+    });
     if (!employee?.user) throw new NotFoundError("User account");
-    if (employee.user.passwordHash) throw new DomainError("This employee has already set a password.");
+    if (employee.user.passwordHash)
+      throw new DomainError("This employee has already set a password.");
     if (!employee.user.isActive) throw new DomainError("This account is deactivated.");
     await sendInvite(employee.user, await appBaseUrl());
     return success("Invitation sent");
@@ -141,8 +145,11 @@ const csvUpload = z.object({
 
 async function readRecords(file: File) {
   const { headers, records } = parseCsvRecords(await file.text());
-  const missing = ["first_name", "last_name", "work_email", "hire_date"].filter((c) => !headers.includes(c));
-  if (missing.length) throw new DomainError(`Missing required column(s): ${missing.join(", ")}.`, "file");
+  const missing = ["first_name", "last_name", "work_email", "hire_date"].filter(
+    (c) => !headers.includes(c),
+  );
+  if (missing.length)
+    throw new DomainError(`Missing required column(s): ${missing.join(", ")}.`, "file");
   const unknown = headers.filter((h) => !(IMPORT_COLUMNS as readonly string[]).includes(h));
   if (unknown.length) throw new DomainError(`Unknown column(s): ${unknown.join(", ")}.`, "file");
   return records;

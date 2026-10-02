@@ -33,7 +33,9 @@ export default async function JobPage({ params }: PageProps<"/recruitment/jobs/[
       applications: {
         orderBy: { stageChangedAt: "desc" },
         include: {
-          candidate: { select: { id: true, firstName: true, lastName: true, email: true, tags: true } },
+          candidate: {
+            select: { id: true, firstName: true, lastName: true, email: true, tags: true },
+          },
           interviews: { select: { id: true, feedback: { select: { rating: true } } } },
         },
       },
@@ -60,7 +62,11 @@ export default async function JobPage({ params }: PageProps<"/recruitment/jobs/[
 
   const available = canManage
     ? await db.candidate.findMany({
-        where: { deletedAt: null, hiredAsEmployeeId: null, applications: { none: { jobOpeningId: job.id } } },
+        where: {
+          deletedAt: null,
+          hiredAsEmployeeId: null,
+          applications: { none: { jobOpeningId: job.id } },
+        },
         orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
         select: { id: true, firstName: true, lastName: true, email: true },
       })
@@ -75,14 +81,19 @@ export default async function JobPage({ params }: PageProps<"/recruitment/jobs/[
             {job.title} <StatusBadge status={job.status} />
           </span>
         }
-        description={[job.department?.name, job.location?.name, labelize(job.employmentType)].filter(Boolean).join(" · ")}
+        description={[job.department?.name, job.location?.name, labelize(job.employmentType)]
+          .filter(Boolean)
+          .join(" · ")}
         actions={
           canManage && (
             <>
               {acceptingCandidates && (
                 <AddCandidateDialog
                   jobId={job.id}
-                  candidates={available.map((c) => ({ value: c.id, label: `${fullName(c)} (${c.email})` }))}
+                  candidates={available.map((c) => ({
+                    value: c.id,
+                    label: `${fullName(c)} (${c.email})`,
+                  }))}
                 />
               )}
               <JobStatusButtons id={job.id} status={job.status} />
@@ -99,7 +110,8 @@ export default async function JobPage({ params }: PageProps<"/recruitment/jobs/[
       <section aria-label="Pipeline" className="grid gap-2">
         {canManage && (
           <p className="text-muted-foreground text-sm">
-            Drag candidates between stages, or use each card&apos;s menu. Candidates are hired from an accepted offer on their profile.
+            Drag candidates between stages, or use each card&apos;s menu. Candidates are hired from
+            an accepted offer on their profile.
           </p>
         )}
         <PipelineBoard cards={cards} canManage={canManage} />
@@ -129,9 +141,18 @@ export default async function JobPage({ params }: PageProps<"/recruitment/jobs/[
               className="sm:grid-cols-1"
               items={[
                 { label: "Position", value: job.position?.title },
-                { label: "Hiring manager", value: job.hiringManager ? fullName(job.hiringManager) : null },
-                { label: "Openings", value: `${job.applications.filter((a) => a.stage === "HIRED").length} of ${job.headcount} filled` },
-                { label: "Published", value: job.publishedAt ? formatDate(job.publishedAt) : "Not yet" },
+                {
+                  label: "Hiring manager",
+                  value: job.hiringManager ? fullName(job.hiringManager) : null,
+                },
+                {
+                  label: "Openings",
+                  value: `${job.applications.filter((a) => a.stage === "HIRED").length} of ${job.headcount} filled`,
+                },
+                {
+                  label: "Published",
+                  value: job.publishedAt ? formatDate(job.publishedAt) : "Not yet",
+                },
                 ...(job.closedAt ? [{ label: "Closed", value: formatDate(job.closedAt) }] : []),
               ]}
             />

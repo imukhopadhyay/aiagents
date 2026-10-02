@@ -25,7 +25,9 @@ export async function submitLeaveRequestAction(input: unknown) {
   return runAction(leaveRequestSchema, input, async (data, user) => {
     const { days, status } = await submitLeaveRequest(user, data);
     return success(
-      status === "APPROVED" ? `Leave booked (${formatDays(days)})` : `Request submitted for approval (${formatDays(days)})`,
+      status === "APPROVED"
+        ? `Leave booked (${formatDays(days)})`
+        : `Request submitted for approval (${formatDays(days)})`,
     );
   });
 }
@@ -34,7 +36,11 @@ export async function decideLeaveRequestAction(input: unknown) {
   return runAction(decisionSchema, input, async (data, user) => {
     const status = await decideLeaveRequest(user, data);
     return success(
-      status === "REJECTED" ? "Request rejected" : status === "APPROVED" ? "Leave approved" : "Approved and sent to HR",
+      status === "REJECTED"
+        ? "Request rejected"
+        : status === "APPROVED"
+          ? "Leave approved"
+          : "Approved and sent to HR",
     );
   });
 }
@@ -77,6 +83,10 @@ export async function adjustBalanceAction(input: unknown) {
 export async function initializeYearAction(input: unknown) {
   return runAction(initializeYearSchema, input, async (data, user) => {
     const count = await initializeYear(user, data);
-    return success(count ? `Created ${count} balance(s) for ${data.year}` : `Balances for ${data.year} already exist`);
+    return success(
+      count
+        ? `Created ${count} balance(s) for ${data.year}`
+        : `Balances for ${data.year} already exist`,
+    );
   });
 }

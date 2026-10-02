@@ -2,7 +2,12 @@
 
 import { useState } from "react";
 
-import { CheckboxField, SelectField, TextField, TextareaField } from "@/components/shared/form-fields";
+import {
+  CheckboxField,
+  SelectField,
+  TextField,
+  TextareaField,
+} from "@/components/shared/form-fields";
 import { SubmitButton } from "@/components/shared/submit-button";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,7 +25,13 @@ import { ACCRUAL_PERIODS, type LeaveTypeInput, leaveTypeSchema } from "@/lib/val
 
 import { saveLeaveTypeAction } from "../../leave/actions";
 
-export function LeaveTypeDialog({ trigger, type }: { trigger: React.ReactNode; type?: LeaveTypeInput & { id: string } }) {
+export function LeaveTypeDialog({
+  trigger,
+  type,
+}: {
+  trigger: React.ReactNode;
+  type?: LeaveTypeInput & { id: string };
+}) {
   const [open, setOpen] = useState(false);
   const { form, onSubmit, pending } = useActionForm({
     schema: leaveTypeSchema,
@@ -57,19 +68,45 @@ export function LeaveTypeDialog({ trigger, type }: { trigger: React.ReactNode; t
               <TextField control={form.control} name="code" label="Code" />
             </div>
             <div className="grid gap-4 sm:grid-cols-3">
-              <TextField control={form.control} name="annualAllowance" label="Days per year" type="number" step={0.5} min={0} />
+              <TextField
+                control={form.control}
+                name="annualAllowance"
+                label="Days per year"
+                type="number"
+                step={0.5}
+                min={0}
+              />
               <SelectField
                 control={form.control}
                 name="accrualPeriod"
                 label="Accrual"
-                options={ACCRUAL_PERIODS.map((p) => ({ value: p, label: p === "NONE" ? "Granted up front" : labelize(p) }))}
+                options={ACCRUAL_PERIODS.map((p) => ({
+                  value: p,
+                  label: p === "NONE" ? "Granted up front" : labelize(p),
+                }))}
               />
-              <TextField control={form.control} name="maxCarryOver" label="Max carry-over" type="number" step={0.5} min={0} />
+              <TextField
+                control={form.control}
+                name="maxCarryOver"
+                label="Max carry-over"
+                type="number"
+                step={0.5}
+                min={0}
+              />
             </div>
-            <TextareaField control={form.control} name="description" label="Policy notes" rows={2} />
+            <TextareaField
+              control={form.control}
+              name="description"
+              label="Policy notes"
+              rows={2}
+            />
             <div className="grid gap-3 sm:grid-cols-3">
               <CheckboxField control={form.control} name="isPaid" label="Paid" />
-              <CheckboxField control={form.control} name="requiresApproval" label="Needs approval" />
+              <CheckboxField
+                control={form.control}
+                name="requiresApproval"
+                label="Needs approval"
+              />
               <CheckboxField control={form.control} name="isActive" label="Active" />
             </div>
             <DialogFooter>

@@ -8,7 +8,14 @@ import { PageHeader } from "@/components/shared/page-header";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { requireAuth } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { todayIn, toDateKey } from "@/lib/domain/dates";
@@ -33,7 +40,11 @@ export default async function LeavePage() {
       <div className="grid gap-6">
         <PageHeader title="Leave" />
         <LeaveTabs active="me" showTeam={showTeam} />
-        <EmptyState icon={CalendarDays} title="No employee record" description="Your account isn't linked to an employee, so you have no leave of your own." />
+        <EmptyState
+          icon={CalendarDays}
+          title="No employee record"
+          description="Your account isn't linked to an employee, so you have no leave of your own."
+        />
       </div>
     );
   }
@@ -56,7 +67,11 @@ export default async function LeavePage() {
         managerApprover: { select: { firstName: true, lastName: true } },
       },
     }),
-    db.leaveType.findMany({ where: { isActive: true }, orderBy: { name: "asc" }, select: { id: true, name: true } }),
+    db.leaveType.findMany({
+      where: { isActive: true },
+      orderBy: { name: "asc" },
+      select: { id: true, name: true },
+    }),
   ]);
 
   return (
@@ -66,7 +81,10 @@ export default async function LeavePage() {
         description="Your balances and time-off requests."
         actions={
           can(user, "leave:request") && (
-            <RequestLeaveDialog types={types.map((t) => ({ value: t.id, label: t.name }))} today={today} />
+            <RequestLeaveDialog
+              types={types.map((t) => ({ value: t.id, label: t.name }))}
+              today={today}
+            />
           )
         }
       />
@@ -78,12 +96,15 @@ export default async function LeavePage() {
             <CardHeader>
               <CardDescription>{b.name}</CardDescription>
               <CardTitle className="text-2xl tabular-nums">
-                {formatDays(b.available)} <span className="text-muted-foreground text-sm font-normal">available</span>
+                {formatDays(b.available)}{" "}
+                <span className="text-muted-foreground text-sm font-normal">available</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="text-muted-foreground grid gap-0.5 text-xs">
               <span>
-                {b.accrualPeriod === "MONTHLY" ? `${b.accrued} of ${b.allocated} accrued` : `${b.allocated} allocated`}
+                {b.accrualPeriod === "MONTHLY"
+                  ? `${b.accrued} of ${b.allocated} accrued`
+                  : `${b.allocated} allocated`}
                 {b.carriedOver ? ` + ${b.carriedOver} carried over` : ""}
               </span>
               <span>
@@ -127,7 +148,10 @@ export default async function LeavePage() {
                       </TableCell>
                       <TableCell className="text-right tabular-nums">{Number(r.days)}</TableCell>
                       <TableCell>
-                        <StatusBadge status={r.status} label={r.status === "MANAGER_APPROVED" ? "Awaiting HR" : undefined} />
+                        <StatusBadge
+                          status={r.status}
+                          label={r.status === "MANAGER_APPROVED" ? "Awaiting HR" : undefined}
+                        />
                       </TableCell>
                       <TableCell className="text-muted-foreground max-w-56 text-xs whitespace-normal">
                         {decidedBy ? fullName(decidedBy) : ""}

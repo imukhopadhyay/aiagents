@@ -28,7 +28,11 @@ async function loadDepartments() {
     orderBy: { name: "asc" },
     include: {
       head: { select: { firstName: true, lastName: true, photoUrl: true } },
-      _count: { select: { employees: { where: { deletedAt: null, employmentStatus: { not: "TERMINATED" } } } } },
+      _count: {
+        select: {
+          employees: { where: { deletedAt: null, employmentStatus: { not: "TERMINATED" } } },
+        },
+      },
     },
   });
 }
@@ -40,7 +44,10 @@ function DepartmentRow({ node, depth }: { node: TreeNode<Row>; depth: number }) 
         href={`/departments/${node.id}`}
         className="hover:bg-muted/50 flex items-center gap-4 border-b px-4 py-3 last:border-0 sm:px-6"
       >
-        <div className="flex min-w-0 flex-1 items-center gap-3" style={{ paddingLeft: `${depth * 1.5}rem` }}>
+        <div
+          className="flex min-w-0 flex-1 items-center gap-3"
+          style={{ paddingLeft: `${depth * 1.5}rem` }}
+        >
           {depth > 0 && <span className="text-muted-foreground">└</span>}
           <Building2 className="text-muted-foreground size-4 shrink-0" />
           <div className="min-w-0">
@@ -51,7 +58,11 @@ function DepartmentRow({ node, depth }: { node: TreeNode<Row>; depth: number }) 
         <div className="hidden items-center gap-2 text-sm sm:flex">
           {node.head ? (
             <>
-              <PersonAvatar name={fullName(node.head)} photoUrl={node.head.photoUrl} className="size-6" />
+              <PersonAvatar
+                name={fullName(node.head)}
+                photoUrl={node.head.photoUrl}
+                className="size-6"
+              />
               <span className="text-muted-foreground">{fullName(node.head)}</span>
             </>
           ) : (
@@ -98,7 +109,11 @@ export default async function DepartmentsPage() {
       />
       <OrgTabs active="departments" />
       {tree.length === 0 ? (
-        <EmptyState icon={Building2} title="No departments yet" description="Create your first department to start building the org structure." />
+        <EmptyState
+          icon={Building2}
+          title="No departments yet"
+          description="Create your first department to start building the org structure."
+        />
       ) : (
         <Card className="py-0">
           <CardContent className="px-0">

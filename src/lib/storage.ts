@@ -12,7 +12,9 @@ import { DomainError } from "@/lib/errors";
 
 export type FileCategory = "photos" | "documents" | "resumes";
 
-const ROOT = path.resolve(process.env.STORAGE_DIR ?? "storage");
+// Uploads are runtime data, not source: tell the bundler not to trace these
+// paths (otherwise it would include the whole project in the server output).
+const ROOT = path.resolve(/*turbopackIgnore: true*/ process.env.STORAGE_DIR ?? "storage");
 const KEY_PATTERN = /^(photos|documents|resumes)\/\d{4}\/[A-Za-z0-9_-]{16,}\.[a-z0-9]{1,5}$/;
 
 const RULES: Record<FileCategory, { maxBytes: number; types: Record<string, string> }> = {
@@ -77,22 +79,22 @@ export async function saveFile(category: FileCategory, file: File): Promise<Stor
   }
 
   const key = `${category}/${new Date().getUTCFullYear()}/${randomBytes(16).toString("base64url")}.${ext}`;
-  const target = path.join(ROOT, key);
-  await mkdir(path.dirname(target), { recursive: true });
-  await writeFile(target, Buffer.from(await file.arrayBuffer()));
+  const target = path.join(/*turbopackIgnore: true*/ ROOT, key);
+  await mkdir(/*turbopackIgnore: true*/ path.dirname(target), { recursive: true });
+  await writeFile(/*turbopackIgnore: true*/ target, Buffer.from(await file.arrayBuffer()));
   return { key, mimeType: file.type, size: file.size, name: file.name.slice(0, 200) };
 }
 
 function resolveKey(key: string): string {
   if (!isValidKey(key)) throw new DomainError("Invalid file key.");
-  const target = path.resolve(ROOT, key);
+  const target = path.resolve(/*turbopackIgnore: true*/ ROOT, key);
   if (!target.startsWith(ROOT + path.sep)) throw new DomainError("Invalid file key.");
   return target;
 }
 
 export async function readStoredFile(key: string): Promise<Buffer | null> {
   try {
-    return await readFile(resolveKey(key));
+    return await readFile(/*turbopackIgnore: true*/ resolveKey(key));
   } catch {
     return null;
   }
@@ -100,7 +102,7 @@ export async function readStoredFile(key: string): Promise<Buffer | null> {
 
 export async function deleteStoredFile(key: string | null | undefined): Promise<void> {
   if (!key || !isValidKey(key)) return;
-  await rm(resolveKey(key), { force: true });
+  await rm(/*turbopackIgnore: true*/ resolveKey(key), { force: true });
 }
 
 /** Public path that serves a stored file through the access-checked route. */

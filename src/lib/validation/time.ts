@@ -27,7 +27,10 @@ export const leaveRequestSchema = z
     endHalfDay: z.boolean().default(false),
     reason: optionalText(1000),
   })
-  .refine((v) => v.endDate >= v.startDate, { error: "End date must be on or after the start date", path: ["endDate"] });
+  .refine((v) => v.endDate >= v.startDate, {
+    error: "End date must be on or after the start date",
+    path: ["endDate"],
+  });
 export type LeaveRequestInput = z.input<typeof leaveRequestSchema>;
 
 export const decisionSchema = z.object({
@@ -75,7 +78,14 @@ export const initializeYearSchema = z.object({ year: z.number().int().min(2000).
 
 // ─── Attendance ──────────────────────────────────────────────────────────────
 
-export const ATTENDANCE_STATUSES = ["PRESENT", "ABSENT", "LATE", "HALF_DAY", "REMOTE", "ON_LEAVE"] as const;
+export const ATTENDANCE_STATUSES = [
+  "PRESENT",
+  "ABSENT",
+  "LATE",
+  "HALF_DAY",
+  "REMOTE",
+  "ON_LEAVE",
+] as const;
 
 export const clockInSchema = z.object({ remote: z.boolean().default(false) });
 

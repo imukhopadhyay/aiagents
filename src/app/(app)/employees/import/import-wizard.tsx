@@ -10,7 +10,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import type { ImportPreview } from "@/lib/services/employees";
 import { IMPORT_COLUMNS } from "@/lib/validation/employee";
 
@@ -62,15 +69,18 @@ export function ImportWizard() {
         <CardHeader>
           <CardTitle>1. Prepare your file</CardTitle>
           <CardDescription>
-            Use the template columns. Required: first_name, last_name, work_email, hire_date (YYYY-MM-DD).
-            Departments and positions are matched by code, locations by name and managers by employee
-            number (including rows in the same file). Imported employees don&apos;t get sign-in accounts;
-            invite them from their profile.
+            Use the template columns. Required: first_name, last_name, work_email, hire_date
+            (YYYY-MM-DD). Departments and positions are matched by code, locations by name and
+            managers by employee number (including rows in the same file). Imported employees
+            don&apos;t get sign-in accounts; invite them from their profile.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Button variant="outline" asChild>
-            <a href={`data:text/csv;charset=utf-8,${encodeURIComponent(TEMPLATE)}`} download="employee-import-template.csv">
+            <a
+              href={`data:text/csv;charset=utf-8,${encodeURIComponent(TEMPLATE)}`}
+              download="employee-import-template.csv"
+            >
               <Download /> Download template
             </a>
           </Button>
@@ -80,7 +90,9 @@ export function ImportWizard() {
       <Card>
         <CardHeader>
           <CardTitle>2. Upload and check</CardTitle>
-          <CardDescription>Nothing is saved until you confirm. If any row has an error, no rows are imported.</CardDescription>
+          <CardDescription>
+            Nothing is saved until you confirm. If any row has an error, no rows are imported.
+          </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4">
           <div className="grid gap-2 sm:max-w-md">
@@ -161,7 +173,10 @@ export function ImportWizard() {
               </Table>
             )}
             <div>
-              <Button onClick={runImport} disabled={pending || preview.errors.length > 0 || preview.valid === 0}>
+              <Button
+                onClick={runImport}
+                disabled={pending || preview.errors.length > 0 || preview.valid === 0}
+              >
                 {pending && <Loader2 className="animate-spin" />}
                 Import {preview.valid} employee{preview.valid === 1 ? "" : "s"}
               </Button>

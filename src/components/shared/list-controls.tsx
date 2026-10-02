@@ -33,7 +33,13 @@ function useUpdateParams() {
   return { update, pending, searchParams };
 }
 
-export function SearchInput({ placeholder = "Search…", param = "q" }: { placeholder?: string; param?: string }) {
+export function SearchInput({
+  placeholder = "Search…",
+  param = "q",
+}: {
+  placeholder?: string;
+  param?: string;
+}) {
   const { update, pending, searchParams } = useUpdateParams();
   const current = searchParams.get(param) ?? "";
   const [value, setValue] = useState(current);

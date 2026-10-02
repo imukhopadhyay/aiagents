@@ -11,7 +11,10 @@ export default async function ImportEmployeesPage() {
   await requirePermission("employee:create");
   return (
     <div className="mx-auto grid max-w-4xl gap-6">
-      <PageHeader title="Import employees" description="Add many employees at once from a CSV file." />
+      <PageHeader
+        title="Import employees"
+        description="Add many employees at once from a CSV file."
+      />
       <ImportWizard />
     </div>
   );

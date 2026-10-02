@@ -25,7 +25,10 @@ export function SortHeader({
   const nextDir = active && dir === "asc" ? "desc" : "asc";
   const Icon = active ? (dir === "asc" ? ArrowUp : ArrowDown) : ArrowUpDown;
   return (
-    <TableHead className={className} aria-sort={active ? (dir === "asc" ? "ascending" : "descending") : "none"}>
+    <TableHead
+      className={className}
+      aria-sort={active ? (dir === "asc" ? "ascending" : "descending") : "none"}
+    >
       <Link
         href={hrefWith(pathname, params, { sort: column, dir: nextDir, page: null })}
         className="hover:text-foreground inline-flex items-center gap-1"

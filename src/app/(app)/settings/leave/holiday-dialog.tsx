@@ -55,7 +55,13 @@ export function HolidayDialog({
             <TextField control={form.control} name="name" label="Name" />
             <div className="grid gap-4 sm:grid-cols-2">
               <TextField control={form.control} name="date" label="Date" type="date" />
-              <SelectField control={form.control} name="locationId" label="Applies to" noneLabel="All locations" options={locations} />
+              <SelectField
+                control={form.control}
+                name="locationId"
+                label="Applies to"
+                noneLabel="All locations"
+                options={locations}
+              />
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>

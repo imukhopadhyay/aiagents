@@ -8,7 +8,14 @@ import { PageHeader } from "@/components/shared/page-header";
 import { PersonAvatar } from "@/components/shared/person-avatar";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { requireAuth } from "@/lib/auth/session";
 import { formatDate, formatDays, fullName } from "@/lib/format";
 import { first } from "@/lib/list-params";
@@ -29,15 +36,26 @@ export default async function ApprovalsPage({ searchParams }: PageProps<"/approv
   if (!canLeave && !canAttendance) forbidden();
 
   const requestedTab = first((await searchParams).tab);
-  const tab = requestedTab === "attendance" && canAttendance ? "attendance" : canLeave ? "leave" : "attendance";
-  const [leave, corrections] = await Promise.all([pendingLeaveApprovals(user), pendingCorrections(user)]);
+  const tab =
+    requestedTab === "attendance" && canAttendance
+      ? "attendance"
+      : canLeave
+        ? "leave"
+        : "attendance";
+  const [leave, corrections] = await Promise.all([
+    pendingLeaveApprovals(user),
+    pendingCorrections(user),
+  ]);
   const isHr = user.permissions["leave:approve"] === "ALL";
 
   const tabs = [
     ...(canLeave ? [{ key: "leave", label: "Leave", count: leave.length }] : []),
-    ...(canAttendance ? [{ key: "attendance", label: "Attendance corrections", count: corrections.length }] : []),
+    ...(canAttendance
+      ? [{ key: "attendance", label: "Attendance corrections", count: corrections.length }]
+      : []),
   ];
-  const time = (d: Date | null, tz: string) => (d ? new Intl.DateTimeFormat("en", { timeStyle: "short", timeZone: tz }).format(d) : "—");
+  const time = (d: Date | null, tz: string) =>
+    d ? new Intl.DateTimeFormat("en", { timeStyle: "short", timeZone: tz }).format(d) : "—";
 
   return (
     <div className="grid gap-6">
@@ -54,14 +72,22 @@ export default async function ApprovalsPage({ searchParams }: PageProps<"/approv
             )}
           >
             {t.label}
-            {t.count > 0 && <span className="bg-primary text-primary-foreground rounded-full px-1.5 text-xs">{t.count}</span>}
+            {t.count > 0 && (
+              <span className="bg-primary text-primary-foreground rounded-full px-1.5 text-xs">
+                {t.count}
+              </span>
+            )}
           </Link>
         ))}
       </div>
 
       {tab === "leave" &&
         (leave.length === 0 ? (
-          <EmptyState icon={CheckSquare} title="No leave requests to review" description="You're all caught up." />
+          <EmptyState
+            icon={CheckSquare}
+            title="No leave requests to review"
+            description="You're all caught up."
+          />
         ) : (
           <Card className="py-0">
             <CardContent className="px-0">
@@ -82,22 +108,36 @@ export default async function ApprovalsPage({ searchParams }: PageProps<"/approv
                       <TableRow key={r.id}>
                         <TableCell className="pl-6">
                           <div className="flex items-center gap-3">
-                            <PersonAvatar name={fullName(r.employee)} photoUrl={r.employee.photoUrl} />
+                            <PersonAvatar
+                              name={fullName(r.employee)}
+                              photoUrl={r.employee.photoUrl}
+                            />
                             <span className="font-medium">{fullName(r.employee)}</span>
                           </div>
                         </TableCell>
                         <TableCell>
                           {r.leaveType.name}
-                          {r.reason && <p className="text-muted-foreground max-w-56 truncate text-xs">“{r.reason}”</p>}
+                          {r.reason && (
+                            <p className="text-muted-foreground max-w-56 truncate text-xs">
+                              “{r.reason}”
+                            </p>
+                          )}
                         </TableCell>
                         <TableCell>
                           {formatDate(r.startDate)} – {formatDate(r.endDate)}
-                          <p className="text-muted-foreground text-xs">{formatDays(Number(r.days))}</p>
+                          <p className="text-muted-foreground text-xs">
+                            {formatDays(Number(r.days))}
+                          </p>
                         </TableCell>
                         <TableCell>
-                          <StatusBadge status={r.status} label={r.status === "PENDING" ? "Manager review" : "HR review"} />
+                          <StatusBadge
+                            status={r.status}
+                            label={r.status === "PENDING" ? "Manager review" : "HR review"}
+                          />
                           {r.managerApprover && (
-                            <p className="text-muted-foreground mt-1 text-xs">Approved by {fullName(r.managerApprover)}</p>
+                            <p className="text-muted-foreground mt-1 text-xs">
+                              Approved by {fullName(r.managerApprover)}
+                            </p>
                           )}
                         </TableCell>
                         <TableCell className="pr-6">
@@ -119,7 +159,11 @@ export default async function ApprovalsPage({ searchParams }: PageProps<"/approv
 
       {tab === "attendance" &&
         (corrections.length === 0 ? (
-          <EmptyState icon={CheckSquare} title="No corrections to review" description="You're all caught up." />
+          <EmptyState
+            icon={CheckSquare}
+            title="No corrections to review"
+            description="You're all caught up."
+          />
         ) : (
           <Card className="py-0">
             <CardContent className="px-0">
@@ -141,7 +185,10 @@ export default async function ApprovalsPage({ searchParams }: PageProps<"/approv
                       <TableRow key={c.id}>
                         <TableCell className="pl-6">
                           <div className="flex items-center gap-3">
-                            <PersonAvatar name={fullName(c.employee)} photoUrl={c.employee.photoUrl} />
+                            <PersonAvatar
+                              name={fullName(c.employee)}
+                              photoUrl={c.employee.photoUrl}
+                            />
                             <span className="font-medium">{fullName(c.employee)}</span>
                           </div>
                         </TableCell>
@@ -150,16 +197,20 @@ export default async function ApprovalsPage({ searchParams }: PageProps<"/approv
                           {c.attendanceRecord ? (
                             <>
                               <StatusBadge status={c.attendanceRecord.status} />{" "}
-                              {time(c.attendanceRecord.clockIn, tz)} – {time(c.attendanceRecord.clockOut, tz)}
+                              {time(c.attendanceRecord.clockIn, tz)} –{" "}
+                              {time(c.attendanceRecord.clockOut, tz)}
                             </>
                           ) : (
                             <span className="text-muted-foreground">No record</span>
                           )}
                         </TableCell>
                         <TableCell className="text-xs">
-                          <StatusBadge status={c.requestedStatus} /> {time(c.requestedClockIn, tz)} – {time(c.requestedClockOut, tz)}
+                          <StatusBadge status={c.requestedStatus} /> {time(c.requestedClockIn, tz)}{" "}
+                          – {time(c.requestedClockOut, tz)}
                         </TableCell>
-                        <TableCell className="max-w-56 text-xs whitespace-normal">{c.reason}</TableCell>
+                        <TableCell className="max-w-56 text-xs whitespace-normal">
+                          {c.reason}
+                        </TableCell>
                         <TableCell className="pr-6">
                           <DecisionButtons
                             id={c.id}

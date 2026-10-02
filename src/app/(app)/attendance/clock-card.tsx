@@ -58,7 +58,9 @@ export function ClockCard({
       <CardHeader>
         <CardTitle>Today</CardTitle>
         <CardDescription>
-          {new Intl.DateTimeFormat("en", { dateStyle: "full", timeZone: "UTC" }).format(new Date(`${today}T00:00:00Z`))}
+          {new Intl.DateTimeFormat("en", { dateStyle: "full", timeZone: "UTC" }).format(
+            new Date(`${today}T00:00:00Z`),
+          )}
           {now && ` · ${now}`} ({timezone})
         </CardDescription>
       </CardHeader>
@@ -74,16 +76,29 @@ export function ClockCard({
           </div>
           <div>
             <p className="text-muted-foreground">Status</p>
-            <div className="pt-1">{status ? <StatusBadge status={status} /> : <span className="text-muted-foreground">Not clocked in</span>}</div>
+            <div className="pt-1">
+              {status ? (
+                <StatusBadge status={status} />
+              ) : (
+                <span className="text-muted-foreground">Not clocked in</span>
+              )}
+            </div>
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
           {!clockIn && (
             <>
-              <Button onClick={() => run(() => clockInAction({ remote: false }))} disabled={pending}>
+              <Button
+                onClick={() => run(() => clockInAction({ remote: false }))}
+                disabled={pending}
+              >
                 {pending ? <Loader2 className="animate-spin" /> : <LogIn />} Clock in
               </Button>
-              <Button variant="outline" onClick={() => run(() => clockInAction({ remote: true }))} disabled={pending}>
+              <Button
+                variant="outline"
+                onClick={() => run(() => clockInAction({ remote: true }))}
+                disabled={pending}
+              >
                 <Home /> Clock in remotely
               </Button>
             </>
@@ -93,7 +108,9 @@ export function ClockCard({
               {pending ? <Loader2 className="animate-spin" /> : <LogOut />} Clock out
             </Button>
           )}
-          {clockIn && clockOut && <p className="text-muted-foreground text-sm">You&apos;re done for today.</p>}
+          {clockIn && clockOut && (
+            <p className="text-muted-foreground text-sm">You&apos;re done for today.</p>
+          )}
         </div>
       </CardContent>
     </Card>

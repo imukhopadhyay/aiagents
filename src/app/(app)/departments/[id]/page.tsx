@@ -10,7 +10,14 @@ import { PersonAvatar } from "@/components/shared/person-avatar";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { requirePermission } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { descendantIds } from "@/lib/domain/org";
@@ -32,7 +39,11 @@ export default async function DepartmentPage({ params }: PageProps<"/departments
     include: {
       parent: { select: { id: true, name: true } },
       head: { select: { id: true, firstName: true, lastName: true, photoUrl: true } },
-      children: { where: { deletedAt: null }, orderBy: { name: "asc" }, select: { id: true, name: true, code: true } },
+      children: {
+        where: { deletedAt: null },
+        orderBy: { name: "asc" },
+        select: { id: true, name: true, code: true },
+      },
       employees: {
         where: { deletedAt: null, employmentStatus: { not: "TERMINATED" } },
         orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
@@ -54,7 +65,10 @@ export default async function DepartmentPage({ params }: PageProps<"/departments
   let manageProps = null;
   if (canManage) {
     const options = await orgOptions();
-    const all = await db.department.findMany({ where: { deletedAt: null }, select: { id: true, parentId: true } });
+    const all = await db.department.findMany({
+      where: { deletedAt: null },
+      select: { id: true, parentId: true },
+    });
     const excluded = descendantIds(department.id, all).add(department.id);
     manageProps = { options, targets: options.departments.filter((d) => !excluded.has(d.value)) };
   }
@@ -106,7 +120,10 @@ export default async function DepartmentPage({ params }: PageProps<"/departments
                 {
                   label: "Parent",
                   value: department.parent ? (
-                    <Link className="underline-offset-4 hover:underline" href={`/departments/${department.parent.id}`}>
+                    <Link
+                      className="underline-offset-4 hover:underline"
+                      href={`/departments/${department.parent.id}`}
+                    >
                       {department.parent.name}
                     </Link>
                   ) : (
@@ -117,7 +134,11 @@ export default async function DepartmentPage({ params }: PageProps<"/departments
                   label: "Head",
                   value: department.head ? (
                     <span className="flex items-center gap-2">
-                      <PersonAvatar name={fullName(department.head)} photoUrl={department.head.photoUrl} className="size-6" />
+                      <PersonAvatar
+                        name={fullName(department.head)}
+                        photoUrl={department.head.photoUrl}
+                        className="size-6"
+                      />
                       {fullName(department.head)}
                     </span>
                   ) : (
@@ -182,7 +203,10 @@ export default async function DepartmentPage({ params }: PageProps<"/departments
                         <div className="flex items-center gap-3">
                           <PersonAvatar name={fullName(e)} photoUrl={e.photoUrl} />
                           {viewable ? (
-                            <Link href={`/employees/${e.id}`} className="font-medium underline-offset-4 hover:underline">
+                            <Link
+                              href={`/employees/${e.id}`}
+                              className="font-medium underline-offset-4 hover:underline"
+                            >
                               {fullName(e)}
                             </Link>
                           ) : (

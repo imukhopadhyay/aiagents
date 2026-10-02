@@ -17,7 +17,7 @@ export function StatCard({
   href?: string;
 }) {
   const card = (
-    <Card className="gap-2 transition-colors hover:border-foreground/20">
+    <Card className="hover:border-foreground/20 gap-2 transition-colors">
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="text-muted-foreground text-sm font-medium">{title}</CardTitle>
         <Icon className="text-muted-foreground size-4" />
@@ -29,7 +29,10 @@ export function StatCard({
     </Card>
   );
   return href ? (
-    <Link href={href} className="rounded-xl focus-visible:ring-ring/50 outline-none focus-visible:ring-[3px]">
+    <Link
+      href={href}
+      className="focus-visible:ring-ring/50 rounded-xl outline-none focus-visible:ring-[3px]"
+    >
       {card}
     </Link>
   ) : (

@@ -4,14 +4,27 @@ import { Star } from "lucide-react";
 
 import { SelectField, TextareaField } from "@/components/shared/form-fields";
 import { SubmitButton } from "@/components/shared/submit-button";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { useActionForm } from "@/hooks/use-action-form";
 import { type FeedbackInput, feedbackSchema } from "@/lib/validation/recruitment";
 import { cn } from "@/lib/utils";
 
 import { submitFeedbackAction } from "../../recruitment/actions";
 
-export function FeedbackForm({ interviewId, existing }: { interviewId: string; existing?: Omit<FeedbackInput, "interviewId"> }) {
+export function FeedbackForm({
+  interviewId,
+  existing,
+}: {
+  interviewId: string;
+  existing?: Omit<FeedbackInput, "interviewId">;
+}) {
   const { form, onSubmit, pending } = useActionForm({
     schema: feedbackSchema,
     defaultValues: {
@@ -46,7 +59,14 @@ export function FeedbackForm({ interviewId, existing }: { interviewId: string; e
                       onClick={() => field.onChange(n)}
                       className="focus-visible:ring-ring/50 rounded p-0.5 outline-none focus-visible:ring-[3px]"
                     >
-                      <Star className={cn("size-6", n <= (field.value ?? 0) ? "fill-amber-400 text-amber-400" : "text-muted-foreground")} />
+                      <Star
+                        className={cn(
+                          "size-6",
+                          n <= (field.value ?? 0)
+                            ? "fill-amber-400 text-amber-400"
+                            : "text-muted-foreground",
+                        )}
+                      />
                     </button>
                   ))}
                 </div>
@@ -70,7 +90,9 @@ export function FeedbackForm({ interviewId, existing }: { interviewId: string; e
         <TextareaField control={form.control} name="concerns" label="Concerns" rows={3} />
         <TextareaField control={form.control} name="notes" label="Other notes" rows={3} />
         <div className="flex justify-end">
-          <SubmitButton pending={pending}>{existing ? "Update feedback" : "Submit feedback"}</SubmitButton>
+          <SubmitButton pending={pending}>
+            {existing ? "Update feedback" : "Submit feedback"}
+          </SubmitButton>
         </div>
       </form>
     </Form>

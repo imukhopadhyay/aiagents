@@ -11,7 +11,14 @@ import { StatusBadge } from "@/components/shared/status-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import type { Prisma } from "@/generated/prisma/client";
 import { requirePermission } from "@/lib/auth/session";
 import { db } from "@/lib/db";
@@ -23,9 +30,14 @@ import { RecruitmentTabs } from "../recruitment-tabs";
 
 export const metadata: Metadata = { title: "Candidates" };
 
-export default async function CandidatesPage({ searchParams }: PageProps<"/recruitment/candidates">) {
+export default async function CandidatesPage({
+  searchParams,
+}: PageProps<"/recruitment/candidates">) {
   const user = await requirePermission("recruitment:read");
-  const params = parseListParams(await searchParams, { sortable: ["created"] as const, defaultSort: "created" });
+  const params = parseListParams(await searchParams, {
+    sortable: ["created"] as const,
+    defaultSort: "created",
+  });
 
   const terms = params.q.split(/\s+/).filter(Boolean).slice(0, 4);
   const where: Prisma.CandidateWhereInput = {
@@ -74,7 +86,10 @@ export default async function CandidatesPage({ searchParams }: PageProps<"/recru
       <RecruitmentTabs active="candidates" />
       <SearchInput placeholder="Search name, email, source or tag" />
       {candidates.length === 0 ? (
-        <EmptyState icon={UserSearch} title={params.q ? "No candidates match" : "No candidates yet"} />
+        <EmptyState
+          icon={UserSearch}
+          title={params.q ? "No candidates match" : "No candidates yet"}
+        />
       ) : (
         <Card className="py-0">
           <CardContent className="px-0">
@@ -92,11 +107,20 @@ export default async function CandidatesPage({ searchParams }: PageProps<"/recru
                 {candidates.map((c) => (
                   <TableRow key={c.id}>
                     <TableCell className="pl-6">
-                      <Link href={`/recruitment/candidates/${c.id}`} className="group flex items-center gap-3">
+                      <Link
+                        href={`/recruitment/candidates/${c.id}`}
+                        className="group flex items-center gap-3"
+                      >
                         <PersonAvatar name={fullName(c)} />
                         <div>
                           <p className="flex items-center gap-1.5 font-medium group-hover:underline">
-                            {fullName(c)} {c.resumeKey && <FileText className="text-muted-foreground size-3.5" aria-label="Has resume" />}
+                            {fullName(c)}{" "}
+                            {c.resumeKey && (
+                              <FileText
+                                className="text-muted-foreground size-3.5"
+                                aria-label="Has resume"
+                              />
+                            )}
                           </p>
                           <p className="text-muted-foreground text-xs">{c.email}</p>
                         </div>
@@ -104,7 +128,9 @@ export default async function CandidatesPage({ searchParams }: PageProps<"/recru
                     </TableCell>
                     <TableCell className="whitespace-normal">
                       <div className="flex flex-col gap-1">
-                        {c.applications.length === 0 && <span className="text-muted-foreground">—</span>}
+                        {c.applications.length === 0 && (
+                          <span className="text-muted-foreground">—</span>
+                        )}
                         {c.applications.slice(0, 2).map((a) => (
                           <span key={a.id} className="flex items-center gap-2 text-xs">
                             <StatusBadge status={a.stage} /> {a.jobOpening.title}
@@ -130,7 +156,13 @@ export default async function CandidatesPage({ searchParams }: PageProps<"/recru
           </CardContent>
         </Card>
       )}
-      <Pagination pathname="/recruitment/candidates" params={params.raw} page={params.page} pageSize={params.pageSize} total={total} />
+      <Pagination
+        pathname="/recruitment/candidates"
+        params={params.raw}
+        page={params.page}
+        pageSize={params.pageSize}
+        total={total}
+      />
     </div>
   );
 }

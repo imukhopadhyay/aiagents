@@ -1,6 +1,11 @@
 "use client";
 
-import { type Option, SelectField, TextField, TextareaField } from "@/components/shared/form-fields";
+import {
+  type Option,
+  SelectField,
+  TextField,
+  TextareaField,
+} from "@/components/shared/form-fields";
 import { SubmitButton } from "@/components/shared/submit-button";
 import { Form } from "@/components/ui/form";
 import { useActionForm } from "@/hooks/use-action-form";
@@ -47,8 +52,18 @@ export function CandidateForm({
         <TextField control={form.control} name="lastName" label="Last name" />
         <TextField control={form.control} name="email" label="Email" type="email" />
         <TextField control={form.control} name="phone" label="Phone" type="tel" />
-        <TextField control={form.control} name="linkedinUrl" label="LinkedIn / portfolio URL" placeholder="https://" />
-        <TextField control={form.control} name="source" label="Source" placeholder="Referral, job board…" />
+        <TextField
+          control={form.control}
+          name="linkedinUrl"
+          label="LinkedIn / portfolio URL"
+          placeholder="https://"
+        />
+        <TextField
+          control={form.control}
+          name="source"
+          label="Source"
+          placeholder="Referral, job board…"
+        />
         <TextField
           control={form.control}
           name="tags"
@@ -66,10 +81,18 @@ export function CandidateForm({
             className="sm:col-span-2"
           />
         )}
-        <TextareaField control={form.control} name="notes" label="Notes" rows={4} className="sm:col-span-2" />
+        <TextareaField
+          control={form.control}
+          name="notes"
+          label="Notes"
+          rows={4}
+          className="sm:col-span-2"
+        />
         <div className="flex justify-end gap-2 sm:col-span-2">
           {footer}
-          <SubmitButton pending={pending}>{candidate ? "Save changes" : "Add candidate"}</SubmitButton>
+          <SubmitButton pending={pending}>
+            {candidate ? "Save changes" : "Add candidate"}
+          </SubmitButton>
         </div>
       </form>
     </Form>

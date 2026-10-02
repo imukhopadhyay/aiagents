@@ -19,7 +19,12 @@ export function first(value: string | string[] | undefined): string | undefined 
 
 export function parseListParams<S extends string>(
   params: SearchParams,
-  options: { sortable: readonly S[]; defaultSort: S; defaultDir?: "asc" | "desc"; pageSize?: number },
+  options: {
+    sortable: readonly S[];
+    defaultSort: S;
+    defaultDir?: "asc" | "desc";
+    pageSize?: number;
+  },
 ): ListParams<S> {
   const raw: Record<string, string> = {};
   for (const [key, value] of Object.entries(params)) {

@@ -6,7 +6,14 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { PageHeader } from "@/components/shared/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { requirePermission } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { can } from "@/lib/rbac/authorize";
@@ -26,10 +33,18 @@ export default async function PositionsPage() {
       orderBy: [{ level: "desc" }, { title: "asc" }],
       include: {
         department: { select: { name: true } },
-        _count: { select: { employees: { where: { deletedAt: null, employmentStatus: { not: "TERMINATED" } } } } },
+        _count: {
+          select: {
+            employees: { where: { deletedAt: null, employmentStatus: { not: "TERMINATED" } } },
+          },
+        },
       },
     }),
-    db.department.findMany({ where: { deletedAt: null }, orderBy: { name: "asc" }, select: { id: true, name: true } }),
+    db.department.findMany({
+      where: { deletedAt: null },
+      orderBy: { name: "asc" },
+      select: { id: true, name: true },
+    }),
   ]);
   const departmentOptions = departments.map((d) => ({ value: d.id, label: d.name }));
 

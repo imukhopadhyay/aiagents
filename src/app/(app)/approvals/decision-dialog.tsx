@@ -28,7 +28,11 @@ export function DecisionButtons({
   id: string;
   summary: string;
   approveLabel?: string;
-  action: (input: { id: string; decision: "approve" | "reject"; comment: string }) => Promise<ActionResult<unknown>>;
+  action: (input: {
+    id: string;
+    decision: "approve" | "reject";
+    comment: string;
+  }) => Promise<ActionResult<unknown>>;
 }) {
   const [decision, setDecision] = useState<"approve" | "reject" | null>(null);
   const [comment, setComment] = useState("");
@@ -68,14 +72,26 @@ export function DecisionButtons({
           <DialogDescription>{summary}</DialogDescription>
         </DialogHeader>
         <div className="grid gap-2">
-          <Label htmlFor={`comment-${id}`}>Comment {decision === "reject" ? "(recommended)" : "(optional)"}</Label>
-          <Textarea id={`comment-${id}`} value={comment} onChange={(e) => setComment(e.target.value)} rows={3} maxLength={1000} />
+          <Label htmlFor={`comment-${id}`}>
+            Comment {decision === "reject" ? "(recommended)" : "(optional)"}
+          </Label>
+          <Textarea
+            id={`comment-${id}`}
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+            rows={3}
+            maxLength={1000}
+          />
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => setDecision(null)} disabled={pending}>
             Cancel
           </Button>
-          <Button variant={decision === "reject" ? "destructive" : "default"} onClick={submit} disabled={pending}>
+          <Button
+            variant={decision === "reject" ? "destructive" : "default"}
+            onClick={submit}
+            disabled={pending}
+          >
             {pending && <Loader2 className="animate-spin" />}
             {decision === "approve" ? approveLabel : "Reject"}
           </Button>

@@ -41,7 +41,9 @@ function PersonCard({ person, highlight }: { person: ChartPerson; highlight: boo
       <div className="min-w-0">
         <p className="truncate text-sm font-medium">{person.name}</p>
         <p className="text-muted-foreground truncate text-xs">{person.title ?? "—"}</p>
-        {person.department && <p className="text-muted-foreground truncate text-xs">{person.department}</p>}
+        {person.department && (
+          <p className="text-muted-foreground truncate text-xs">{person.department}</p>
+        )}
       </div>
     </div>
   );
@@ -87,7 +89,13 @@ function Branch({
       {!isCollapsed && node.children.length > 0 && (
         <ul className="border-border mt-2 ml-[0.85rem] grid gap-2 border-l pl-6">
           {node.children.map((child) => (
-            <Branch key={child.id} node={child} collapsed={collapsed} toggle={toggle} matches={matches} />
+            <Branch
+              key={child.id}
+              node={child}
+              collapsed={collapsed}
+              toggle={toggle}
+              matches={matches}
+            />
           ))}
         </ul>
       )}
@@ -150,11 +158,7 @@ export function OrgChart({ people }: { people: ChartPerson[] }) {
         <Button variant="outline" size="sm" onClick={() => setCollapsed(new Set())}>
           <Plus /> Expand all
         </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setCollapsed(collectIds(tree))}
-        >
+        <Button variant="outline" size="sm" onClick={() => setCollapsed(collectIds(tree))}>
           <Minus /> Collapse all
         </Button>
         {query && (
@@ -166,7 +170,13 @@ export function OrgChart({ people }: { people: ChartPerson[] }) {
       <div className="overflow-x-auto pb-4">
         <ul className="grid w-max gap-3">
           {tree.map((node) => (
-            <Branch key={node.id} node={node} collapsed={effectiveCollapsed} toggle={toggle} matches={matches} />
+            <Branch
+              key={node.id}
+              node={node}
+              collapsed={effectiveCollapsed}
+              toggle={toggle}
+              matches={matches}
+            />
           ))}
         </ul>
       </div>

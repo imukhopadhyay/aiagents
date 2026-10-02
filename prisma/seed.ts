@@ -392,7 +392,7 @@ const OFFICE_UTC_OFFSET_HOURS: Record<string, number> = { Headquarters: -4, "Lon
 async function seedAttendance(employees: Map<string, string>) {
   const today = dateKey(new Date());
   let seed = 7;
-  const rand = () => ((seed = (seed * 9301 + 49297) % 233280) / 233280);
+  const rand = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
   for (const [number, employeeId] of employees) {
     if (number === "E0008") continue; // leave one person without history
     for (let offset = 14; offset >= 1; offset--) {
@@ -450,10 +450,18 @@ async function seedLeaveRequests(employees: Map<string, string>) {
         decidedAt: new Date(),
       },
     });
-    await db.leaveBalance.update({
-      where: { employeeId_leaveTypeId_year: { employeeId: emma, leaveTypeId: annual.id, year: Number(monday.slice(0, 4)) } },
-      data: { used: { increment: 3 } },
-    }).catch(() => undefined);
+    await db.leaveBalance
+      .update({
+        where: {
+          employeeId_leaveTypeId_year: {
+            employeeId: emma,
+            leaveTypeId: annual.id,
+            year: Number(monday.slice(0, 4)),
+          },
+        },
+        data: { used: { increment: 3 } },
+      })
+      .catch(() => undefined);
   }
   if ((await db.leaveRequest.count({ where: { employeeId: liam } })) === 0) {
     await db.leaveRequest.create({

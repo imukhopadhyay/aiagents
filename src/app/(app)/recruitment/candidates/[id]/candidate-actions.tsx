@@ -2,10 +2,23 @@
 
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Briefcase, CalendarPlus, FileSignature, Loader2, Pencil, Upload, UserCheck } from "lucide-react";
+import {
+  Briefcase,
+  CalendarPlus,
+  FileSignature,
+  Loader2,
+  Pencil,
+  Upload,
+  UserCheck,
+} from "lucide-react";
 import { toast } from "sonner";
 
-import { type Option, SelectField, TextField, TextareaField } from "@/components/shared/form-fields";
+import {
+  type Option,
+  SelectField,
+  TextField,
+  TextareaField,
+} from "@/components/shared/form-fields";
 import { SubmitButton } from "@/components/shared/submit-button";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -20,10 +33,21 @@ import {
 } from "@/components/ui/dialog";
 import { Form, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useActionForm } from "@/hooks/use-action-form";
 import { labelize } from "@/lib/format";
-import { type CandidateInput, INTERVIEW_TYPES, interviewSchema, offerSchema } from "@/lib/validation/recruitment";
+import {
+  type CandidateInput,
+  INTERVIEW_TYPES,
+  interviewSchema,
+  offerSchema,
+} from "@/lib/validation/recruitment";
 
 import {
   applyToJobAction,
@@ -35,13 +59,20 @@ import {
 } from "../../actions";
 import { CandidateForm } from "../candidate-form";
 
-export function ResumeUpload({ candidateId, hasResume }: { candidateId: string; hasResume: boolean }) {
+export function ResumeUpload({
+  candidateId,
+  hasResume,
+}: {
+  candidateId: string;
+  hasResume: boolean;
+}) {
   const input = useRef<HTMLInputElement>(null);
   const [pending, startTransition] = useTransition();
   return (
     <>
       <Button variant="outline" size="sm" disabled={pending} onClick={() => input.current?.click()}>
-        {pending ? <Loader2 className="animate-spin" /> : <Upload />} {hasResume ? "Replace resume" : "Upload resume"}
+        {pending ? <Loader2 className="animate-spin" /> : <Upload />}{" "}
+        {hasResume ? "Replace resume" : "Upload resume"}
       </Button>
       <input
         ref={input}
@@ -68,7 +99,11 @@ export function ResumeUpload({ candidateId, hasResume }: { candidateId: string; 
   );
 }
 
-export function EditCandidateDialog({ candidate }: { candidate: Omit<CandidateInput, "tags"> & { id: string; tags: string[] } }) {
+export function EditCandidateDialog({
+  candidate,
+}: {
+  candidate: Omit<CandidateInput, "tags"> & { id: string; tags: string[] };
+}) {
   const [open, setOpen] = useState(false);
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -179,7 +214,9 @@ export function ScheduleInterviewDialog({
       <DialogContent className="sm:max-w-xl">
         <DialogHeader>
           <DialogTitle>Schedule interview</DialogTitle>
-          <DialogDescription>Times are in the job location&apos;s time zone ({timezone}). Interviewers are notified.</DialogDescription>
+          <DialogDescription>
+            Times are in the job location&apos;s time zone ({timezone}). Interviewers are notified.
+          </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={onSubmit} className="grid gap-4" noValidate>
@@ -188,9 +225,20 @@ export function ScheduleInterviewDialog({
                 control={form.control}
                 name="type"
                 label="Type"
-                options={INTERVIEW_TYPES.map((t) => ({ value: t, label: t === "HR" ? "HR" : labelize(t) }))}
+                options={INTERVIEW_TYPES.map((t) => ({
+                  value: t,
+                  label: t === "HR" ? "HR" : labelize(t),
+                }))}
               />
-              <TextField control={form.control} name="durationMinutes" label="Duration (minutes)" type="number" min={15} max={480} step={15} />
+              <TextField
+                control={form.control}
+                name="durationMinutes"
+                label="Duration (minutes)"
+                type="number"
+                min={15}
+                max={480}
+                step={15}
+              />
               <TextField control={form.control} name="date" label="Date" type="date" />
               <TextField control={form.control} name="time" label="Time" type="time" />
             </div>
@@ -209,7 +257,9 @@ export function ScheduleInterviewDialog({
                           <Checkbox
                             checked={value.includes(e.value)}
                             onCheckedChange={(checked) =>
-                              field.onChange(checked ? [...value, e.value] : value.filter((v) => v !== e.value))
+                              field.onChange(
+                                checked ? [...value, e.value] : value.filter((v) => v !== e.value),
+                              )
                             }
                           />
                           {e.label}
@@ -272,10 +322,22 @@ export function OfferDialog({
         <Form {...form}>
           <form onSubmit={onSubmit} className="grid gap-4" noValidate>
             <div className="grid gap-4 sm:grid-cols-[1fr_6rem]">
-              <TextField control={form.control} name="salary" label="Annual salary" type="number" min={0} step={1000} />
+              <TextField
+                control={form.control}
+                name="salary"
+                label="Annual salary"
+                type="number"
+                min={0}
+                step={1000}
+              />
               <TextField control={form.control} name="currency" label="Currency" maxLength={3} />
               <TextField control={form.control} name="startDate" label="Start date" type="date" />
-              <TextField control={form.control} name="expiresAt" label="Offer expires" type="date" />
+              <TextField
+                control={form.control}
+                name="expiresAt"
+                label="Offer expires"
+                type="date"
+              />
             </div>
             <TextareaField control={form.control} name="notes" label="Notes" rows={3} />
             <DialogFooter>
@@ -291,7 +353,14 @@ export function OfferDialog({
   );
 }
 
-const OFFER_NEXT: Record<string, { label: string; to: "SENT" | "ACCEPTED" | "DECLINED" | "WITHDRAWN" | "EXPIRED"; variant?: "outline" }[]> = {
+const OFFER_NEXT: Record<
+  string,
+  {
+    label: string;
+    to: "SENT" | "ACCEPTED" | "DECLINED" | "WITHDRAWN" | "EXPIRED";
+    variant?: "outline";
+  }[]
+> = {
   DRAFT: [
     { label: "Mark sent", to: "SENT" },
     { label: "Withdraw", to: "WITHDRAWN", variant: "outline" },
@@ -328,7 +397,15 @@ export function OfferStatusButtons({ id, status }: { id: string; status: string 
   );
 }
 
-export function HireDialog({ applicationId, name, email }: { applicationId: string; name: string; email: string }) {
+export function HireDialog({
+  applicationId,
+  name,
+  email,
+}: {
+  applicationId: string;
+  name: string;
+  email: string;
+}) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [createAccount, setCreateAccount] = useState(true);
@@ -344,8 +421,8 @@ export function HireDialog({ applicationId, name, email }: { applicationId: stri
         <DialogHeader>
           <DialogTitle>Hire {name}?</DialogTitle>
           <DialogDescription>
-            Creates an employee record on probation using the job&apos;s department, position, location and hiring manager,
-            starting on the offer&apos;s start date.
+            Creates an employee record on probation using the job&apos;s department, position,
+            location and hiring manager, starting on the offer&apos;s start date.
           </DialogDescription>
         </DialogHeader>
         <label className="flex items-center gap-2 text-sm">

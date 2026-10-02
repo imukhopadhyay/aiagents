@@ -12,7 +12,9 @@ import { CandidateForm } from "../candidate-form";
 
 export const metadata: Metadata = { title: "New candidate" };
 
-export default async function NewCandidatePage({ searchParams }: PageProps<"/recruitment/candidates/new">) {
+export default async function NewCandidatePage({
+  searchParams,
+}: PageProps<"/recruitment/candidates/new">) {
   await requirePermission("recruitment:manage");
   const job = first((await searchParams).job);
   const jobs = await db.jobOpening.findMany({

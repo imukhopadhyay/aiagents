@@ -155,7 +155,10 @@ export function CheckboxField<T extends FieldValues>({
         <FormItem className={className}>
           <div className="flex items-start gap-3">
             <FormControl>
-              <Checkbox checked={Boolean(field.value)} onCheckedChange={(v) => field.onChange(v === true)} />
+              <Checkbox
+                checked={Boolean(field.value)}
+                onCheckedChange={(v) => field.onChange(v === true)}
+              />
             </FormControl>
             <div className="grid gap-1">
               <FormLabel className="font-normal">{label}</FormLabel>

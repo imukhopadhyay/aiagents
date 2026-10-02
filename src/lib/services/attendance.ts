@@ -7,7 +7,15 @@ import type { CurrentUser } from "@/lib/auth/session";
 import { recordAudit } from "@/lib/audit";
 import { db } from "@/lib/db";
 import { clockInStatus, workedHours, zonedDateTime } from "@/lib/domain/attendance";
-import { type DateKey, eachDay, fromDateKey, isWeekend, monthRange, todayIn, toDateKey } from "@/lib/domain/dates";
+import {
+  type DateKey,
+  eachDay,
+  fromDateKey,
+  isWeekend,
+  monthRange,
+  todayIn,
+  toDateKey,
+} from "@/lib/domain/dates";
 import { DomainError, NotFoundError } from "@/lib/errors";
 import { formatDate } from "@/lib/format";
 import { AuthorizationError, can } from "@/lib/rbac/authorize";
@@ -19,7 +27,8 @@ import { holidaySet, requireOwnEmployee } from "./time-common";
 
 async function ownForRecording(user: CurrentUser) {
   const employee = await requireOwnEmployee(user.employeeId);
-  if (!can(user, "attendance:record", { employeeId: employee.id })) throw new AuthorizationError("attendance:record");
+  if (!can(user, "attendance:record", { employeeId: employee.id }))
+    throw new AuthorizationError("attendance:record");
   return employee;
 }
 
@@ -53,7 +62,13 @@ export async function clockIn(user: CurrentUser, input: z.output<typeof clockInS
     update: { clockIn: now, status },
     create: { employeeId: employee.id, date, clockIn: now, status },
   });
-  await recordAudit({ actorId: user.id, action: "CREATE", entity: "AttendanceRecord", entityId: employee.id, changes: { clockIn: now, status } });
+  await recordAudit({
+    actorId: user.id,
+    action: "CREATE",
+    entity: "AttendanceRecord",
+    entityId: employee.id,
+    changes: { clockIn: now, status },
+  });
   return status;
 }
 
@@ -67,14 +82,24 @@ export async function clockOut(user: CurrentUser) {
   if (!record?.clockIn) throw new DomainError("Clock in before clocking out.");
   if (record.clockOut) throw new DomainError("You've already clocked out today.");
   await db.attendanceRecord.update({ where: { id: record.id }, data: { clockOut: now } });
-  await recordAudit({ actorId: user.id, action: "UPDATE", entity: "AttendanceRecord", entityId: employee.id, changes: { clockOut: now } });
+  await recordAudit({
+    actorId: user.id,
+    action: "UPDATE",
+    entity: "AttendanceRecord",
+    entityId: employee.id,
+    changes: { clockOut: now },
+  });
 }
 
 // ─── Corrections ─────────────────────────────────────────────────────────────
 
-export async function requestCorrection(user: CurrentUser, input: z.output<typeof correctionSchema>) {
+export async function requestCorrection(
+  user: CurrentUser,
+  input: z.output<typeof correctionSchema>,
+) {
   const employee = await ownForRecording(user);
-  if (input.date > todayIn(employee.timezone)) throw new DomainError("You can't correct a future date.", "date");
+  if (input.date > todayIn(employee.timezone))
+    throw new DomainError("You can't correct a future date.", "date");
   if (["PRESENT", "LATE", "REMOTE", "HALF_DAY"].includes(input.status) && !input.clockIn) {
     throw new DomainError("Enter the clock-in time.", "clockIn");
   }
@@ -93,13 +118,23 @@ export async function requestCorrection(user: CurrentUser, input: z.output<typeo
       employeeId: employee.id,
       attendanceRecordId: record?.id,
       date,
-      requestedClockIn: input.clockIn ? zonedDateTime(input.date, input.clockIn, employee.timezone) : null,
-      requestedClockOut: input.clockOut ? zonedDateTime(input.date, input.clockOut, employee.timezone) : null,
+      requestedClockIn: input.clockIn
+        ? zonedDateTime(input.date, input.clockIn, employee.timezone)
+        : null,
+      requestedClockOut: input.clockOut
+        ? zonedDateTime(input.date, input.clockOut, employee.timezone)
+        : null,
       requestedStatus: input.status,
       reason: input.reason,
     },
   });
-  await recordAudit({ actorId: user.id, action: "CREATE", entity: "AttendanceCorrection", entityId: correction.id, changes: input });
+  await recordAudit({
+    actorId: user.id,
+    action: "CREATE",
+    entity: "AttendanceCorrection",
+    entityId: correction.id,
+    changes: input,
+  });
 
   const notification = {
     type: "attendance.correction_requested",
@@ -117,8 +152,10 @@ export async function reviewCorrection(user: CurrentUser, input: z.output<typeof
   if (!can(user, "attendance:manage", { employeeId: correction.employeeId })) {
     throw new AuthorizationError("attendance:manage");
   }
-  if (correction.employeeId === user.employeeId) throw new DomainError("You can't review your own correction.");
-  if (correction.status !== "PENDING") throw new DomainError("This correction has already been reviewed.");
+  if (correction.employeeId === user.employeeId)
+    throw new DomainError("You can't review your own correction.");
+  if (correction.status !== "PENDING")
+    throw new DomainError("This correction has already been reviewed.");
 
   const approve = input.decision === "approve";
   await db.$transaction(async (tx) => {
@@ -172,7 +209,15 @@ export async function pendingCorrections(user: CurrentUser) {
     },
     orderBy: { date: "asc" },
     include: {
-      employee: { select: { id: true, firstName: true, lastName: true, photoUrl: true, location: { select: { timezone: true } } } },
+      employee: {
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          photoUrl: true,
+          location: { select: { timezone: true } },
+        },
+      },
       attendanceRecord: true,
     },
   });
@@ -206,10 +251,17 @@ function resolveDays(opts: {
   return opts.days.map((date) => {
     const record = opts.records.get(date);
     if (record) {
-      return { date, status: record.status, clockIn: record.clockIn, clockOut: record.clockOut, hours: workedHours(record.clockIn, record.clockOut) };
+      return {
+        date,
+        status: record.status,
+        clockIn: record.clockIn,
+        clockOut: record.clockOut,
+        hours: workedHours(record.clockIn, record.clockOut),
+      };
     }
     const base = { date, clockIn: null, clockOut: null, hours: null };
-    if (opts.leaveDays.has(date) && !isWeekend(date) && !opts.holidays.has(date)) return { ...base, status: "ON_LEAVE" };
+    if (opts.leaveDays.has(date) && !isWeekend(date) && !opts.holidays.has(date))
+      return { ...base, status: "ON_LEAVE" };
     if (opts.holidays.has(date)) return { ...base, status: "HOLIDAY" };
     if (isWeekend(date)) return { ...base, status: "WEEKEND" };
     if (date > opts.today) return { ...base, status: "FUTURE" };
@@ -240,7 +292,10 @@ async function approvedLeaveDays(employeeIds: string[], start: DateKey, end: Dat
   return byEmployee;
 }
 
-async function employeesInScope(user: CurrentUser, extra: { departmentId?: string; employeeId?: string } = {}) {
+async function employeesInScope(
+  user: CurrentUser,
+  extra: { departmentId?: string; employeeId?: string } = {},
+) {
   return db.employee.findMany({
     where: {
       ...employeeAccessWhere(user, "attendance:read"),
@@ -287,7 +342,9 @@ export async function monthlyAttendance(
   const days = eachDay(start, end);
   return employees.map((employee) => {
     const own = new Map(
-      records.filter((r) => r.employeeId === employee.id).map((r) => [toDateKey(r.date), r] as const),
+      records
+        .filter((r) => r.employeeId === employee.id)
+        .map((r) => [toDateKey(r.date), r] as const),
     );
     const resolved = resolveDays({
       days,

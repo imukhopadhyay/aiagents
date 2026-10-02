@@ -21,9 +21,22 @@ import { AttendanceTabs } from "../attendance-tabs";
 
 export const metadata: Metadata = { title: "Attendance report" };
 
-const SHORT: Record<string, string> = { PRESENT: "P", REMOTE: "R", LATE: "L", HALF_DAY: "½", ABSENT: "A", ON_LEAVE: "V", HOLIDAY: "H", WEEKEND: "", FUTURE: "", NONE: "" };
+const SHORT: Record<string, string> = {
+  PRESENT: "P",
+  REMOTE: "R",
+  LATE: "L",
+  HALF_DAY: "½",
+  ABSENT: "A",
+  ON_LEAVE: "V",
+  HOLIDAY: "H",
+  WEEKEND: "",
+  FUTURE: "",
+  NONE: "",
+};
 
-export default async function AttendanceReportPage({ searchParams }: PageProps<"/attendance/report">) {
+export default async function AttendanceReportPage({
+  searchParams,
+}: PageProps<"/attendance/report">) {
   const user = await requireAuth();
   if (!canViewTeamAttendance(user)) forbidden();
   const sp = await searchParams;
@@ -34,7 +47,11 @@ export default async function AttendanceReportPage({ searchParams }: PageProps<"
 
   const [rows, departments] = await Promise.all([
     monthlyAttendance(user, month, { departmentId: department }),
-    db.department.findMany({ where: { deletedAt: null }, orderBy: { name: "asc" }, select: { id: true, name: true } }),
+    db.department.findMany({
+      where: { deletedAt: null },
+      orderBy: { name: "asc" },
+      select: { id: true, name: true },
+    }),
   ]);
   const days = rows[0]?.days.map((d) => d.date) ?? [];
 
@@ -56,7 +73,11 @@ export default async function AttendanceReportPage({ searchParams }: PageProps<"
       />
       <AttendanceTabs active="report" showTeam />
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <FilterSelect param="department" label="Departments" options={departments.map((d) => ({ value: d.id, label: d.name }))} />
+        <FilterSelect
+          param="department"
+          label="Departments"
+          options={departments.map((d) => ({ value: d.id, label: d.name }))}
+        />
         <Legend statuses={["PRESENT", "REMOTE", "LATE", "ABSENT", "ON_LEAVE", "HOLIDAY"]} />
       </div>
       {rows.length === 0 ? (
@@ -67,9 +88,14 @@ export default async function AttendanceReportPage({ searchParams }: PageProps<"
             <table className="w-full border-collapse text-xs">
               <thead>
                 <tr className="border-b">
-                  <th className="bg-card sticky left-0 z-10 min-w-44 px-4 py-2 text-left text-sm font-medium">Employee</th>
+                  <th className="bg-card sticky left-0 z-10 min-w-44 px-4 py-2 text-left text-sm font-medium">
+                    Employee
+                  </th>
                   {days.map((d) => (
-                    <th key={d} className="text-muted-foreground min-w-7 px-0.5 py-2 text-center font-normal">
+                    <th
+                      key={d}
+                      className="text-muted-foreground min-w-7 px-0.5 py-2 text-center font-normal"
+                    >
                       {Number(d.slice(8))}
                     </th>
                   ))}
@@ -83,12 +109,17 @@ export default async function AttendanceReportPage({ searchParams }: PageProps<"
               <tbody>
                 {rows.map(({ employee, days: cells, summary }) => (
                   <tr key={employee.id} className="border-b last:border-0">
-                    <td className="bg-card sticky left-0 z-10 px-4 py-2 text-sm font-medium whitespace-nowrap">{fullName(employee)}</td>
+                    <td className="bg-card sticky left-0 z-10 px-4 py-2 text-sm font-medium whitespace-nowrap">
+                      {fullName(employee)}
+                    </td>
                     {cells.map((c) => (
                       <td key={c.date} className="px-0.5 py-1">
                         <div
                           title={`${formatDate(c.date)}: ${DAY_STATUS_STYLES[c.status]?.label}`}
-                          className={cn("flex size-6 items-center justify-center rounded-sm font-medium", DAY_STATUS_STYLES[c.status]?.cell)}
+                          className={cn(
+                            "flex size-6 items-center justify-center rounded-sm font-medium",
+                            DAY_STATUS_STYLES[c.status]?.cell,
+                          )}
                         >
                           {SHORT[c.status]}
                         </div>

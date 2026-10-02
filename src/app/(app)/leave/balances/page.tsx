@@ -8,7 +8,14 @@ import { FilterSelect } from "@/components/shared/list-controls";
 import { PageHeader } from "@/components/shared/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { requireAuth } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { fromDateKey, todayIn } from "@/lib/domain/dates";
@@ -31,7 +38,9 @@ export default async function LeaveBalancesPage({ searchParams }: PageProps<"/le
   const currentYear = Number(todayIn("UTC").slice(0, 4));
   const year = Number(first(sp.year)) || currentYear;
   const department = first(sp.department);
-  const params: Record<string, string> = department ? { department, year: String(year) } : { year: String(year) };
+  const params: Record<string, string> = department
+    ? { department, year: String(year) }
+    : { year: String(year) };
   const canAdjust = can(user, "leave:manage");
 
   const [employees, types, departments] = await Promise.all([
@@ -45,8 +54,15 @@ export default async function LeaveBalancesPage({ searchParams }: PageProps<"/le
       orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
       select: { id: true, firstName: true, lastName: true },
     }),
-    db.leaveType.findMany({ where: { isActive: true, annualAllowance: { gt: 0 } }, orderBy: { name: "asc" } }),
-    db.department.findMany({ where: { deletedAt: null }, orderBy: { name: "asc" }, select: { id: true, name: true } }),
+    db.leaveType.findMany({
+      where: { isActive: true, annualAllowance: { gt: 0 } },
+      orderBy: { name: "asc" },
+    }),
+    db.department.findMany({
+      where: { deletedAt: null },
+      orderBy: { name: "asc" },
+      select: { id: true, name: true },
+    }),
   ]);
   const ids = employees.map((e) => e.id);
   const [balances, pending] = await Promise.all([
@@ -61,7 +77,8 @@ export default async function LeaveBalancesPage({ searchParams }: PageProps<"/le
       _sum: { days: true },
     }),
   ]);
-  const month = year === currentYear ? Number(todayIn("UTC").slice(5, 7)) : year < currentYear ? 12 : 0;
+  const month =
+    year === currentYear ? Number(todayIn("UTC").slice(5, 7)) : year < currentYear ? 12 : 0;
 
   return (
     <div className="grid gap-6">
@@ -71,13 +88,19 @@ export default async function LeaveBalancesPage({ searchParams }: PageProps<"/le
         actions={
           <div className="flex items-center gap-2">
             <Button variant="outline" size="icon" asChild>
-              <Link href={hrefWith("/leave/balances", params, { year: year - 1 })} aria-label="Previous year">
+              <Link
+                href={hrefWith("/leave/balances", params, { year: year - 1 })}
+                aria-label="Previous year"
+              >
                 <ChevronLeft />
               </Link>
             </Button>
             <span className="w-12 text-center text-sm font-medium">{year}</span>
             <Button variant="outline" size="icon" asChild>
-              <Link href={hrefWith("/leave/balances", params, { year: year + 1 })} aria-label="Next year">
+              <Link
+                href={hrefWith("/leave/balances", params, { year: year + 1 })}
+                aria-label="Next year"
+              >
                 <ChevronRight />
               </Link>
             </Button>
@@ -85,7 +108,11 @@ export default async function LeaveBalancesPage({ searchParams }: PageProps<"/le
         }
       />
       <LeaveTabs active="balances" showTeam />
-      <FilterSelect param="department" label="Departments" options={departments.map((d) => ({ value: d.id, label: d.name }))} />
+      <FilterSelect
+        param="department"
+        label="Departments"
+        options={departments.map((d) => ({ value: d.id, label: d.name }))}
+      />
       {employees.length === 0 || types.length === 0 ? (
         <EmptyState icon={Users} title="Nothing to show" />
       ) : (
@@ -107,12 +134,24 @@ export default async function LeaveBalancesPage({ searchParams }: PageProps<"/le
                   <TableRow key={e.id}>
                     <TableCell className="pl-6 font-medium">{fullName(e)}</TableCell>
                     {types.map((t) => {
-                      const b = balances.find((x) => x.employeeId === e.id && x.leaveTypeId === t.id);
+                      const b = balances.find(
+                        (x) => x.employeeId === e.id && x.leaveTypeId === t.id,
+                      );
                       const allocated = Number(b?.allocated ?? 0);
                       const carried = Number(b?.carriedOver ?? 0);
                       const used = Number(b?.used ?? 0);
-                      const pend = Number(pending.find((p) => p.employeeId === e.id && p.leaveTypeId === t.id)?._sum.days ?? 0);
-                      const available = availableDays({ allocated: accruedDays(allocated, t.accrualPeriod, month), carriedOver: carried, used }, pend);
+                      const pend = Number(
+                        pending.find((p) => p.employeeId === e.id && p.leaveTypeId === t.id)?._sum
+                          .days ?? 0,
+                      );
+                      const available = availableDays(
+                        {
+                          allocated: accruedDays(allocated, t.accrualPeriod, month),
+                          carriedOver: carried,
+                          used,
+                        },
+                        pend,
+                      );
                       const label = (
                         <span className="tabular-nums">
                           <span className="font-medium">{b ? available : "—"}</span>{" "}

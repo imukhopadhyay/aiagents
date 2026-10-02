@@ -80,7 +80,9 @@ export function NotificationBell({
         </div>
         <ul className="max-h-80 overflow-y-auto">
           {notifications.length === 0 && (
-            <li className="text-muted-foreground px-4 py-8 text-center text-sm">You&apos;re all caught up.</li>
+            <li className="text-muted-foreground px-4 py-8 text-center text-sm">
+              You&apos;re all caught up.
+            </li>
           )}
           {notifications.map((n) => (
             <li key={n.id}>
@@ -96,7 +98,9 @@ export function NotificationBell({
                   {!n.read && <span className="bg-primary size-1.5 shrink-0 rounded-full" />}
                   {n.title}
                 </span>
-                {n.body && <span className="text-muted-foreground line-clamp-2 text-xs">{n.body}</span>}
+                {n.body && (
+                  <span className="text-muted-foreground line-clamp-2 text-xs">{n.body}</span>
+                )}
                 <span className="text-muted-foreground text-xs">{relative(n.createdAt)}</span>
               </button>
             </li>

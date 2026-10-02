@@ -3,7 +3,12 @@
 import { useState } from "react";
 import { UserMinus } from "lucide-react";
 
-import { type Option, SelectField, TextField, TextareaField } from "@/components/shared/form-fields";
+import {
+  type Option,
+  SelectField,
+  TextField,
+  TextareaField,
+} from "@/components/shared/form-fields";
 import { SubmitButton } from "@/components/shared/submit-button";
 import { Button } from "@/components/ui/button";
 import {
@@ -58,13 +63,18 @@ export function OffboardDialog({
         <DialogHeader>
           <DialogTitle>Offboard {name}</DialogTitle>
           <DialogDescription>
-            Marks the employee as terminated, deactivates their sign-in, cancels open leave requests and
-            removes them as a department head.
+            Marks the employee as terminated, deactivates their sign-in, cancels open leave requests
+            and removes them as a department head.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={onSubmit} className="grid gap-4" noValidate>
-            <TextField control={form.control} name="terminationDate" label="Last working day" type="date" />
+            <TextField
+              control={form.control}
+              name="terminationDate"
+              label="Last working day"
+              type="date"
+            />
             {reportCount > 0 && (
               <SelectField
                 control={form.control}

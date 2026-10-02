@@ -16,7 +16,9 @@ export function RecruitmentTabs({ active }: { active: "jobs" | "candidates" }) {
           aria-current={active === tab.key ? "page" : undefined}
           className={cn(
             "rounded-md px-3 py-1 text-sm font-medium",
-            active === tab.key ? "bg-background text-foreground shadow-sm" : "hover:text-foreground",
+            active === tab.key
+              ? "bg-background text-foreground shadow-sm"
+              : "hover:text-foreground",
           )}
         >
           {tab.label}

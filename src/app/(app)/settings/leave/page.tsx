@@ -6,7 +6,14 @@ import { PageHeader } from "@/components/shared/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { requirePermission } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { fromDateKey, todayIn, toDateKey } from "@/lib/domain/dates";
@@ -28,19 +35,28 @@ export default async function LeaveSettingsPage() {
       orderBy: { date: "asc" },
       include: { location: { select: { name: true } } },
     }),
-    db.location.findMany({ where: { deletedAt: null }, orderBy: { name: "asc" }, select: { id: true, name: true } }),
+    db.location.findMany({
+      where: { deletedAt: null },
+      orderBy: { name: "asc" },
+      select: { id: true, name: true },
+    }),
   ]);
   const locationOptions = locations.map((l) => ({ value: l.id, label: l.name }));
 
   return (
     <div className="grid gap-6">
-      <PageHeader title="Leave settings" description="Leave types, accrual policies and public holidays." />
+      <PageHeader
+        title="Leave settings"
+        description="Leave types, accrual policies and public holidays."
+      />
 
       <Card className="py-0">
         <CardHeader className="flex flex-row items-center justify-between pt-6">
           <div>
             <CardTitle>Leave types</CardTitle>
-            <CardDescription>Monthly accrual earns 1/12 of the allowance each month.</CardDescription>
+            <CardDescription>
+              Monthly accrual earns 1/12 of the allowance each month.
+            </CardDescription>
           </div>
           <LeaveTypeDialog
             trigger={
@@ -66,11 +82,18 @@ export default async function LeaveSettingsPage() {
               {types.map((t) => (
                 <TableRow key={t.id} className={t.isActive ? undefined : "opacity-60"}>
                   <TableCell className="pl-6">
-                    <span className="font-medium">{t.name}</span> <span className="text-muted-foreground text-xs">{t.code}</span>
+                    <span className="font-medium">{t.name}</span>{" "}
+                    <span className="text-muted-foreground text-xs">{t.code}</span>
                   </TableCell>
-                  <TableCell className="text-right tabular-nums">{Number(t.annualAllowance) || "—"}</TableCell>
-                  <TableCell>{t.accrualPeriod === "NONE" ? "Up front" : labelize(t.accrualPeriod)}</TableCell>
-                  <TableCell className="text-right tabular-nums">{Number(t.maxCarryOver) || "—"}</TableCell>
+                  <TableCell className="text-right tabular-nums">
+                    {Number(t.annualAllowance) || "—"}
+                  </TableCell>
+                  <TableCell>
+                    {t.accrualPeriod === "NONE" ? "Up front" : labelize(t.accrualPeriod)}
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums">
+                    {Number(t.maxCarryOver) || "—"}
+                  </TableCell>
                   <TableCell className="flex flex-wrap gap-1">
                     <Badge variant="secondary">{t.isPaid ? "Paid" : "Unpaid"}</Badge>
                     {!t.requiresApproval && <Badge variant="secondary">Auto-approved</Badge>}
@@ -109,7 +132,9 @@ export default async function LeaveSettingsPage() {
           <CardHeader className="flex flex-row items-center justify-between pt-6">
             <div>
               <CardTitle>Public holidays</CardTitle>
-              <CardDescription>Holidays aren&apos;t counted as leave days or absences.</CardDescription>
+              <CardDescription>
+                Holidays aren&apos;t counted as leave days or absences.
+              </CardDescription>
             </div>
             <HolidayDialog
               locations={locationOptions}
@@ -130,12 +155,19 @@ export default async function LeaveSettingsPage() {
                     <TableRow key={h.id}>
                       <TableCell className="pl-6">{formatDate(h.date)}</TableCell>
                       <TableCell className="font-medium">{h.name}</TableCell>
-                      <TableCell className="text-muted-foreground">{h.location?.name ?? "All locations"}</TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {h.location?.name ?? "All locations"}
+                      </TableCell>
                       <TableCell className="w-24 pr-6">
                         <div className="flex justify-end gap-1">
                           <HolidayDialog
                             locations={locationOptions}
-                            holiday={{ id: h.id, name: h.name, date: toDateKey(h.date), locationId: h.locationId }}
+                            holiday={{
+                              id: h.id,
+                              name: h.name,
+                              date: toDateKey(h.date),
+                              locationId: h.locationId,
+                            }}
                             trigger={
                               <Button variant="ghost" size="icon" aria-label={`Edit ${h.name}`}>
                                 <Pencil />
@@ -168,8 +200,8 @@ export default async function LeaveSettingsPage() {
           <CardHeader>
             <CardTitle>Start a new leave year</CardTitle>
             <CardDescription>
-              Creates balances for every current employee with the full allowance plus capped carry-over of unused days.
-              Existing balances aren&apos;t changed.
+              Creates balances for every current employee with the full allowance plus capped
+              carry-over of unused days. Existing balances aren&apos;t changed.
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-wrap gap-2">

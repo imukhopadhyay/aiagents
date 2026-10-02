@@ -50,7 +50,12 @@ export function ProfileDialog({ profile }: { profile: ProfileInput }) {
         <Form {...form}>
           <form onSubmit={onSubmit} className="grid gap-4" noValidate>
             <TextField control={form.control} name="phone" label="Phone" type="tel" />
-            <TextField control={form.control} name="personalEmail" label="Personal email" type="email" />
+            <TextField
+              control={form.control}
+              name="personalEmail"
+              label="Personal email"
+              type="email"
+            />
             <TextareaField control={form.control} name="address" label="Address" rows={3} />
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>

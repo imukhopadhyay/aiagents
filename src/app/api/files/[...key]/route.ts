@@ -61,7 +61,8 @@ export async function GET(_request: Request, ctx: RouteContext<"/api/files/[...k
       "Content-Disposition": `${disposition}${filename}`,
       "Cache-Control": "private, max-age=300",
       "X-Content-Type-Options": "nosniff",
-      "Content-Security-Policy": "default-src 'none'; img-src 'self'; style-src 'unsafe-inline'; sandbox",
+      "Content-Security-Policy":
+        "default-src 'none'; img-src 'self'; style-src 'unsafe-inline'; sandbox",
     },
   });
 }

@@ -65,7 +65,11 @@ export function ConfirmAction({
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel disabled={pending}>Cancel</AlertDialogCancel>
-          <Button variant={destructive ? "destructive" : "default"} onClick={run} disabled={pending}>
+          <Button
+            variant={destructive ? "destructive" : "default"}
+            onClick={run}
+            disabled={pending}
+          >
             {pending && <Loader2 className="animate-spin" />}
             {confirmLabel}
           </Button>
