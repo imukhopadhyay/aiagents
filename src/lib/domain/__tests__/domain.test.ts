@@ -13,7 +13,9 @@ import {
   todayIn,
 } from "@/lib/domain/dates";
 import {
+  accruedDays,
   availableDays,
+  carryOver,
   countLeaveDays,
   initialLeaveStatus,
   isCancellable,
@@ -124,6 +126,22 @@ describe("leave workflow", () => {
     expect(isCancellable("APPROVED", "2026-07-01", "2026-06-01")).toBe(true);
     expect(isCancellable("APPROVED", "2026-05-01", "2026-06-01")).toBe(false);
     expect(isCancellable("REJECTED", "2026-07-01", "2026-06-01")).toBe(false);
+  });
+});
+
+describe("accrual and carry-over", () => {
+  it("accrues monthly allowances by month", () => {
+    expect(accruedDays(20, "MONTHLY", 1)).toBe(1.5);
+    expect(accruedDays(20, "MONTHLY", 6)).toBe(10);
+    expect(accruedDays(20, "MONTHLY", 12)).toBe(20);
+    expect(accruedDays(20, "YEARLY", 1)).toBe(20);
+    expect(accruedDays(0, "NONE", 5)).toBe(0);
+  });
+
+  it("caps carry-over", () => {
+    expect(carryOver({ allocated: 20, carriedOver: 0, used: 12 }, 5)).toBe(5);
+    expect(carryOver({ allocated: 20, carriedOver: 0, used: 18 }, 5)).toBe(2);
+    expect(carryOver({ allocated: 20, carriedOver: 0, used: 25 }, 5)).toBe(0);
   });
 });
 

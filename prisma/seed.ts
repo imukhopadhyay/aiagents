@@ -353,6 +353,123 @@ async function seedLeave(employees: Map<string, string>) {
   }
 }
 
+function dateKey(d: Date) {
+  return d.toISOString().slice(0, 10);
+}
+
+function addDaysKey(key: string, days: number) {
+  const d = new Date(`${key}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + days);
+  return dateKey(d);
+}
+
+function isWeekendKey(key: string) {
+  const day = new Date(`${key}T00:00:00Z`).getUTCDay();
+  return day === 0 || day === 6;
+}
+
+async function seedHolidays(locations: Map<string, string>) {
+  const year = new Date().getUTCFullYear();
+  const holidays = [
+    { name: "New Year's Day", date: `${year}-01-01`, location: null },
+    { name: "Christmas Day", date: `${year}-12-25`, location: null },
+    { name: "Thanksgiving", date: `${year}-11-26`, location: "Headquarters" },
+    { name: "Boxing Day (substitute)", date: `${year}-12-28`, location: "London Office" },
+    { name: "New Year's Day", date: `${year + 1}-01-01`, location: null },
+  ];
+  for (const h of holidays) {
+    const locationId = h.location ? locations.get(h.location)! : null;
+    const date = new Date(`${h.date}T00:00:00Z`);
+    const exists = await db.holiday.findFirst({ where: { date, locationId, name: h.name } });
+    if (!exists) await db.holiday.create({ data: { name: h.name, date, locationId } });
+  }
+}
+
+// Approximate UTC offsets so demo clock-ins land around 9am local time.
+const OFFICE_UTC_OFFSET_HOURS: Record<string, number> = { Headquarters: -4, "London Office": 1 };
+
+/** Two weeks of plausible attendance for everyone, deterministic per person and day. */
+async function seedAttendance(employees: Map<string, string>) {
+  const today = dateKey(new Date());
+  let seed = 7;
+  const rand = () => ((seed = (seed * 9301 + 49297) % 233280) / 233280);
+  for (const [number, employeeId] of employees) {
+    if (number === "E0008") continue; // leave one person without history
+    for (let offset = 14; offset >= 1; offset--) {
+      const key = addDaysKey(today, -offset);
+      if (isWeekendKey(key)) continue;
+      const r = rand();
+      if (r < 0.06) continue; // occasional absence
+      const late = r > 0.88;
+      const remote = r > 0.7 && r <= 0.88;
+      const startMinutes = late ? 9 * 60 + 25 : 8 * 60 + 30 + Math.floor(rand() * 35);
+      const office = PEOPLE.find((p) => p.number === number)?.location ?? "Headquarters";
+      const clockIn = new Date(`${key}T00:00:00Z`);
+      clockIn.setUTCMinutes(startMinutes - (OFFICE_UTC_OFFSET_HOURS[office] ?? 0) * 60);
+      const clockOut = new Date(clockIn.getTime() + (8 * 60 + Math.floor(rand() * 60)) * 60_000);
+      await db.attendanceRecord.upsert({
+        where: { employeeId_date: { employeeId, date: new Date(`${key}T00:00:00Z`) } },
+        update: {},
+        create: {
+          employeeId,
+          date: new Date(`${key}T00:00:00Z`),
+          clockIn,
+          clockOut,
+          status: late ? "LATE" : remote ? "REMOTE" : "PRESENT",
+        },
+      });
+    }
+  }
+}
+
+async function seedLeaveRequests(employees: Map<string, string>) {
+  const annual = await db.leaveType.findUniqueOrThrow({ where: { code: "AL" } });
+  const today = dateKey(new Date());
+  // Next Monday-based dates so the samples are always in the future.
+  let monday = addDaysKey(today, 7);
+  while (new Date(`${monday}T00:00:00Z`).getUTCDay() !== 1) monday = addDaysKey(monday, 1);
+
+  const emma = employees.get("E0006")!;
+  const liam = employees.get("E0007")!;
+  const marcus = employees.get("E0005")!;
+  const hannah = employees.get("E0002")!;
+
+  if ((await db.leaveRequest.count({ where: { employeeId: emma } })) === 0) {
+    await db.leaveRequest.create({
+      data: {
+        employeeId: emma,
+        leaveTypeId: annual.id,
+        startDate: new Date(`${monday}T00:00:00Z`),
+        endDate: new Date(`${addDaysKey(monday, 2)}T00:00:00Z`),
+        days: 3,
+        reason: "Family visit",
+        status: "APPROVED",
+        managerApproverId: marcus,
+        managerDecidedAt: new Date(),
+        approverId: hannah,
+        decidedAt: new Date(),
+      },
+    });
+    await db.leaveBalance.update({
+      where: { employeeId_leaveTypeId_year: { employeeId: emma, leaveTypeId: annual.id, year: Number(monday.slice(0, 4)) } },
+      data: { used: { increment: 3 } },
+    }).catch(() => undefined);
+  }
+  if ((await db.leaveRequest.count({ where: { employeeId: liam } })) === 0) {
+    await db.leaveRequest.create({
+      data: {
+        employeeId: liam,
+        leaveTypeId: annual.id,
+        startDate: new Date(`${addDaysKey(monday, 7)}T00:00:00Z`),
+        endDate: new Date(`${addDaysKey(monday, 11)}T00:00:00Z`),
+        days: 5,
+        reason: "Holiday",
+        status: "PENDING",
+      },
+    });
+  }
+}
+
 async function seedRecruitment(
   employees: Map<string, string>,
   org: Awaited<ReturnType<typeof seedOrganization>>,
@@ -403,6 +520,9 @@ async function main() {
   const org = await seedOrganization();
   const employees = await seedPeople(roleIds, org);
   await seedLeave(employees);
+  await seedHolidays(org.locations);
+  await seedAttendance(employees);
+  await seedLeaveRequests(employees);
   await seedRecruitment(employees, org);
 
   console.info(

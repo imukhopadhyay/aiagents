@@ -77,3 +77,22 @@ export function isCancellable(status: LeaveStatus, start: DateKey, today: DateKe
   if (status === "PENDING" || status === "MANAGER_APPROVED") return true;
   return status === "APPROVED" && start > today;
 }
+
+export type AccrualPeriod = "NONE" | "MONTHLY" | "YEARLY";
+
+/**
+ * Days earned so far in the year. MONTHLY types accrue 1/12 of the
+ * allowance per month (rounded down to the half day), counting `month`
+ * (1–12) as earned; YEARLY and NONE grant everything up front.
+ */
+export function accruedDays(allocated: number, period: AccrualPeriod, month: number): number {
+  if (period !== "MONTHLY") return allocated;
+  const clamped = Math.min(12, Math.max(0, month));
+  return Math.floor(((allocated * clamped) / 12) * 2) / 2;
+}
+
+/** Carry-over into the next year: unused days, capped by the policy. */
+export function carryOver(balance: BalanceLike, maxCarryOver: number): number {
+  const unused = balance.allocated + balance.carriedOver - balance.used;
+  return Math.max(0, Math.min(maxCarryOver, unused));
+}
