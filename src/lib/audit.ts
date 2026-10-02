@@ -10,7 +10,8 @@ export interface AuditEntry {
   action: AuditAction;
   entity: string;
   entityId?: string | null;
-  changes?: Prisma.InputJsonValue;
+  /** Any JSON-serializable value; Dates become ISO strings. */
+  changes?: unknown;
 }
 
 async function requestMeta() {
@@ -38,7 +39,10 @@ export async function recordAudit(entry: AuditEntry): Promise<void> {
         action: entry.action,
         entity: entry.entity,
         entityId: entry.entityId ?? null,
-        changes: entry.changes,
+        changes:
+          entry.changes === undefined
+            ? undefined
+            : (JSON.parse(JSON.stringify(entry.changes)) as Prisma.InputJsonValue),
         ...(await requestMeta()),
       },
     });
