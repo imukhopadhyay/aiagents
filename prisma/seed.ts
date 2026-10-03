@@ -14,7 +14,13 @@ const db = new PrismaClient({
 });
 
 const ADMIN_EMAIL = (process.env.SEED_ADMIN_EMAIL ?? "admin@example.com").toLowerCase();
-const ADMIN_PASSWORD = process.env.SEED_ADMIN_PASSWORD ?? "ChangeMe123!";
+// Demo people, attendance, leave and recruitment data are seeded in
+// development. In production only roles, permissions, leave types and the
+// admin account are created, unless SEED_DEMO_DATA=true.
+const DEMO_DATA = process.env.SEED_DEMO_DATA
+  ? process.env.SEED_DEMO_DATA === "true"
+  : process.env.NODE_ENV !== "production";
+const ADMIN_PASSWORD = process.env.SEED_ADMIN_PASSWORD ?? (DEMO_DATA ? "ChangeMe123!" : undefined);
 const DEMO_PASSWORD = process.env.SEED_DEMO_PASSWORD ?? "ChangeMe123!";
 
 async function syncRbac() {
@@ -520,10 +526,26 @@ async function seedRecruitment(
 }
 
 async function main() {
+  if (
+    !ADMIN_PASSWORD ||
+    (!DEMO_DATA && (ADMIN_PASSWORD.length < 12 || ADMIN_PASSWORD === "ChangeMe123!"))
+  ) {
+    throw new Error(
+      "Set SEED_ADMIN_PASSWORD to a unique password of at least 12 characters to seed a production database.",
+    );
+  }
   const roleIds = await syncRbac();
 
   const admin = await upsertUser(ADMIN_EMAIL, "System Administrator", ADMIN_PASSWORD);
   await assignRoles(admin.id, ["SUPER_ADMIN"], roleIds);
+
+  if (!DEMO_DATA) {
+    await seedLeave(new Map());
+    console.info(
+      `Seeded ${roleIds.size} roles, ${Object.keys(PERMISSIONS).length} permissions, leave types and ${ADMIN_EMAIL}.`,
+    );
+    return;
+  }
 
   const org = await seedOrganization();
   const employees = await seedPeople(roleIds, org);

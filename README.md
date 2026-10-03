@@ -70,6 +70,11 @@ The seed also creates:
 - One approved and one pending leave request.
 - One open job with a candidate in screening.
 
+## Deploying
+
+The app is set up for Vercel with Neon Postgres and private Vercel Blob storage.
+See [DEPLOY.md](DEPLOY.md) for step-by-step instructions.
+
 ## Scripts
 
 | Script                               | Purpose                                     |
@@ -206,9 +211,9 @@ server.
 - **Email isn't sent yet.** `src/lib/mail.ts` logs messages to the server
   console, including reset and invitation links. Connect a real provider before
   going live. In-app notifications work.
-- **Files are stored on local disk** under `STORAGE_DIR`. Swap
-  `src/lib/storage.ts` for object storage on multi-instance or serverless
-  hosting.
+- **Uploads are limited to 4 MB** to fit Vercel's request size cap. They go
+  to private Vercel Blob storage when `BLOB_READ_WRITE_TOKEN` is set, and to
+  local disk under `STORAGE_DIR` otherwise.
 - **Sign-in has no rate limiting.** Add a limiter or a WAF.
 - **Denied pages return HTTP 200, not 403.** Inside the app, the loading
   skeleton starts streaming before a permission check runs, so the status code

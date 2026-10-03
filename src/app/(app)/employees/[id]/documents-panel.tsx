@@ -110,7 +110,7 @@ function UploadForm({ employeeId }: { employeeId: string }) {
         {pending ? <Loader2 className="animate-spin" /> : <Upload />} Upload
       </Button>
       <p className="text-muted-foreground text-xs sm:col-span-4">
-        PDF, Word, text or images, up to 10 MB.
+        PDF, Word, text or images, up to 4 MB.
       </p>
     </form>
   );

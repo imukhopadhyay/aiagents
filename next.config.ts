@@ -5,8 +5,9 @@ const nextConfig: NextConfig = {
     // Enables forbidden()/unauthorized() for permission failures.
     authInterrupts: true,
     serverActions: {
-      // Largest upload is a 10 MB document, plus multipart overhead.
-      bodySizeLimit: "11mb",
+      // Largest upload is 4 MB plus multipart overhead; Vercel caps request
+      // bodies at 4.5 MB.
+      bodySizeLimit: "4.5mb",
     },
   },
 };

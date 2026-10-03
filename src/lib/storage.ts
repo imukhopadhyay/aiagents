@@ -4,11 +4,19 @@ import { randomBytes } from "node:crypto";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 
+import { del as blobDel, get as blobGet, put as blobPut } from "@vercel/blob";
+
 import { DomainError } from "@/lib/errors";
 
-// Local-disk storage. Keys look like "documents/2026/<random>.pdf"; the
+// File storage behind opaque keys like "documents/2026/<random>.pdf"; the
 // category prefix decides who may read the file (see /api/files).
-// Swap this module for S3/GCS in production; callers only use keys.
+//
+// Two drivers: private Vercel Blob when BLOB_READ_WRITE_TOKEN is set (needed
+// on Vercel, whose filesystem doesn't persist), otherwise local disk under
+// STORAGE_DIR. Blobs are private, so files are only ever served through the
+// access-checked route, never by a public URL.
+
+const useBlob = Boolean(process.env.BLOB_READ_WRITE_TOKEN);
 
 export type FileCategory = "photos" | "documents" | "resumes";
 
@@ -22,8 +30,9 @@ const RULES: Record<FileCategory, { maxBytes: number; types: Record<string, stri
     maxBytes: 2 * 1024 * 1024,
     types: { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" },
   },
+  // Kept under Vercel's 4.5 MB function request limit.
   documents: {
-    maxBytes: 10 * 1024 * 1024,
+    maxBytes: 4 * 1024 * 1024,
     types: {
       "application/pdf": "pdf",
       "image/jpeg": "jpg",
@@ -34,7 +43,7 @@ const RULES: Record<FileCategory, { maxBytes: number; types: Record<string, stri
     },
   },
   resumes: {
-    maxBytes: 5 * 1024 * 1024,
+    maxBytes: 4 * 1024 * 1024,
     types: {
       "application/pdf": "pdf",
       "application/msword": "doc",
@@ -79,9 +88,14 @@ export async function saveFile(category: FileCategory, file: File): Promise<Stor
   }
 
   const key = `${category}/${new Date().getUTCFullYear()}/${randomBytes(16).toString("base64url")}.${ext}`;
-  const target = path.join(/*turbopackIgnore: true*/ ROOT, key);
-  await mkdir(/*turbopackIgnore: true*/ path.dirname(target), { recursive: true });
-  await writeFile(/*turbopackIgnore: true*/ target, Buffer.from(await file.arrayBuffer()));
+  const body = Buffer.from(await file.arrayBuffer());
+  if (useBlob) {
+    await blobPut(key, body, { access: "private", addRandomSuffix: false, contentType: file.type });
+  } else {
+    const target = path.join(/*turbopackIgnore: true*/ ROOT, key);
+    await mkdir(/*turbopackIgnore: true*/ path.dirname(target), { recursive: true });
+    await writeFile(/*turbopackIgnore: true*/ target, body);
+  }
   return { key, mimeType: file.type, size: file.size, name: file.name.slice(0, 200) };
 }
 
@@ -94,6 +108,12 @@ function resolveKey(key: string): string {
 
 export async function readStoredFile(key: string): Promise<Buffer | null> {
   try {
+    if (useBlob) {
+      if (!isValidKey(key)) return null;
+      const result = await blobGet(key, { access: "private" });
+      if (!result || result.statusCode !== 200) return null;
+      return Buffer.from(await new Response(result.stream).arrayBuffer());
+    }
     return await readFile(/*turbopackIgnore: true*/ resolveKey(key));
   } catch {
     return null;
@@ -102,6 +122,10 @@ export async function readStoredFile(key: string): Promise<Buffer | null> {
 
 export async function deleteStoredFile(key: string | null | undefined): Promise<void> {
   if (!key || !isValidKey(key)) return;
+  if (useBlob) {
+    await blobDel(key);
+    return;
+  }
   await rm(/*turbopackIgnore: true*/ resolveKey(key), { force: true });
 }
 
